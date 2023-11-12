@@ -8,39 +8,38 @@ import java.io.UnsupportedEncodingException;
 
 //Client to server execution request message
 public class CtSExecMsg implements IMessage{
-    private static final byte msgType = 1; // value to distinguish message server side
-    private byte[] data; // request
+    private static final byte opcode = 0; // value to distinguish message server side
+    private int requestN; // request number (in clients pov)
     private int mem; // necessary memory in bytes
-    private int requestN; // request number (in clients pov) 
-
-    // o requestN já é o código de tarefa do enunciado ??????????
+    private byte[] data; // request data
 
     public CtSExecMsg() {
         // n faz nada, preencher com setters
     }
 
     public CtSExecMsg(byte[] bArray, int mem, int requestN) {
-        this.data = bArray; //bArray.clone()?
-        this.mem = mem;
         this.requestN = requestN;
+        this.mem = mem;
+        this.data = bArray; //bArray.clone()?
     }
 
+    //serialize sends msgType before data, for server msg distinction!!
     public void serialize(DataOutputStream dos) throws IOException{
-        dos.writeByte(msgType);
-
+        dos.writeByte(opcode);
+        dos.writeInt(this.requestN);
+        dos.writeInt(this.mem);
         dos.writeInt(this.data.length);
         dos.write(this.data);
-        dos.writeInt(this.mem);
-        dos.writeInt(this.requestN);
         dos.flush();
     }
 
+    //deserialize assumes opcode was previously read, only uses information after opcode
     public void deserialize(DataInputStream dis) throws IOException {
+        this.setRequestN(dis.readInt());
+        this.setMem(dis.readInt());
         byte[] data = new byte[dis.readInt()];
         dis.readFully(data);
         this.setData(data);
-        this.setMem(dis.readInt());
-        this.setRequestN(dis.readInt());
     }
 
     public byte[] getData() {

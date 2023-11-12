@@ -6,6 +6,8 @@ import java.io.DataOutputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.concurrent.TimeUnit;
+
 import grupo49.CtSAutMsg;
 import grupo49.CtSExecMsg;
 import grupo49.StCStatusMsg;
@@ -31,6 +33,8 @@ public class Client
             CtSExecMsg testeMsg2 = new CtSExecMsg("É o nosso guiador".getBytes(),150,1);
             testeMsg2.serialize(out);
 
+            TimeUnit.SECONDS.sleep(10);
+            
             socket.shutdownOutput();
             socket.shutdownInput();
             socket.close();

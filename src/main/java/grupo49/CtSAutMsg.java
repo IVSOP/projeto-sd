@@ -7,7 +7,6 @@ import java.io.IOException;
 
 //Client to server authentication and register message
 public class CtSAutMsg implements IMessage {
-    private static final byte msgType = 0; // value to distinguish message server side
     private String name;
     private String password;
 
@@ -20,11 +19,8 @@ public class CtSAutMsg implements IMessage {
         this.password = password;
     }
 
-    //serialize sends msgType before data, for server msg distinction!!
     public void serialize(DataOutputStream dos) throws IOException{
-        dos.writeByte(msgType);
-
-        byte[] data= this.name.getBytes("UTF-8");
+        byte[] data = this.name.getBytes("UTF-8");
         dos.writeInt(this.name.length());
         dos.write(data);
         data = this.password.getBytes("UTF-8");
@@ -33,6 +29,7 @@ public class CtSAutMsg implements IMessage {
         dos.flush();
     }
 
+    //deserialize assumes opcode was previously read, only uses information after opcode
     public void deserialize(DataInputStream dis) throws IOException {
         byte[] data = new byte[dis.readInt()];
         dis.readFully(data);
