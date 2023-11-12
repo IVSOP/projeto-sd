@@ -14,15 +14,15 @@ public class Server
 	public static final int BufferSize = 10;
 
 	private ServerSocket socketToClients;
-	private BoundedBuffer<Integer> inputBuffer;
-	private BoundedBuffer<Integer> outputBuffer;
+	private BoundedBuffer<ClientMessage<IMessage>> inputBuffer;
+	private BoundedBuffer<ClientMessage<IMessage>> outputBuffer;
 
 	public Server() {
 		try {
 			socketToClients = new ServerSocket(PortToClient);
 
-			inputBuffer = new BoundedBuffer<Integer>(BufferSize);
-			outputBuffer = new BoundedBuffer<Integer>(BufferSize);
+			inputBuffer = new BoundedBuffer<ClientMessage<IMessage>>(BufferSize);
+			outputBuffer = new BoundedBuffer<ClientMessage<IMessage>>(BufferSize);
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -34,7 +34,7 @@ public class Server
 			while (true) { // 1 thread para cada cliente
 				Socket socket = socketToClients.accept();
 
-				Thread t = new Thread(new AnswerClientRunnable(socket));
+				Thread t = new Thread(new AnswerClientRunnable(socket,inputBuffer));
 				t.start();
 			}
 		} catch (IOException e) {
