@@ -19,7 +19,7 @@ public class Server
 	public static final int localOutputBufferClientSize = 10; // local porque ha 1 por cliente
 
 	private ServerSocket socketToClients;
-	private BoundedBuffer<ClientMessage<IMessage>> inputBufferClient; // client requests are all written to this buffer
+	private BoundedBuffer<ClientMessage<CtSMsg>> inputBufferClient; // client requests are all written to this buffer
 
 	private ServerSocket socketToWorkers;
 
@@ -37,21 +37,21 @@ public class Server
 	private int clientID_counter;
 
 	private Map<String, ClientData> clientEmailMap; // email, dados do cliente
-	private Map<Integer, BoundedBuffer<ClientMessage<IMessage>>> clientOutputBufferMap; // buffers de output para os clientes
+	private Map<Integer, BoundedBuffer<StCMsg>> clientOutputBufferMap; // buffers de output para os clientes
 	private ReentrantReadWriteLock clientOutputBufferMapLock;
 
 
 	public Server() {
 		clientID_counter = 0;
 		clientEmailMap = new HashMap<String, ClientData>();
-		clientOutputBufferMap = new HashMap<Integer, BoundedBuffer<ClientMessage<IMessage>>>();
+		clientOutputBufferMap = new HashMap<Integer, BoundedBuffer<StCMsg>>();
 		clientOutputBufferMapLock = new ReentrantReadWriteLock(); // (true)??????????????????
 
 		try {
 			socketToClients = new ServerSocket(PortToClient);
 			socketToWorkers = new ServerSocket(PortToWorker);
 
-			inputBufferClient = new BoundedBuffer<ClientMessage<IMessage>>(inputBufferClientSize);
+			inputBufferClient = new BoundedBuffer<ClientMessage<CtSMsg>>(inputBufferClientSize);
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -67,8 +67,8 @@ public class Server
 	}
 
 	// faz ele proprio lock
-	public BoundedBuffer<ClientMessage<IMessage>> getClientOutputBuffer(int clientID) {
-		BoundedBuffer<ClientMessage<IMessage>> ret = null;
+	public BoundedBuffer<StCMsg> getClientOutputBuffer(int clientID) {
+		BoundedBuffer<StCMsg> ret = null;
 		try {
 			clientOutputBufferMapLock.readLock().lock();
 
@@ -81,7 +81,7 @@ public class Server
 	}
 
 	// faz ele proprio lock
-	public void putClientOutputBuffer(int clientID, BoundedBuffer<ClientMessage<IMessage>> buff) {
+	public void putClientOutputBuffer(int clientID, BoundedBuffer<StCMsg> buff) {
 		try {
 			clientOutputBufferMapLock.writeLock().lock();
 
@@ -102,7 +102,7 @@ public class Server
 		}
 	}
 
-	public void pushInputBufferClient(ClientMessage<IMessage> message) {
+	public void pushInputBufferClient(ClientMessage<CtSMsg> message) {
 		try {
 			inputBufferClient.push(message);
 		} catch (Exception e) {

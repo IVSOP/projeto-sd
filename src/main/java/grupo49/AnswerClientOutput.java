@@ -1,14 +1,15 @@
 package grupo49;
 
 import java.io.DataOutputStream;
+import java.io.IOException;
 
 // nunca fecha a socket
 public class AnswerClientOutput implements Runnable {
 
     private DataOutputStream out;
-	private BoundedBuffer<ClientMessage<IMessage>> outputBuffer;
+	private BoundedBuffer<StCMsg> outputBuffer;
 
-    public AnswerClientOutput(DataOutputStream out, BoundedBuffer<ClientMessage<IMessage>> outputBuffer) {
+    public AnswerClientOutput(DataOutputStream out, BoundedBuffer<StCMsg> outputBuffer) {
 		this.out = out;
 		this.outputBuffer = outputBuffer;
 	}
@@ -17,14 +18,14 @@ public class AnswerClientOutput implements Runnable {
     public void run() {
         try {
             while (true) {
-				ClientMessage<IMessage> message = outputBuffer.pop();
+				StCMsg message = outputBuffer.pop();
 
-				message.deserialize(out);
+				message.serialize(out);
 				// out.flush();
 			}
             
-        // } catch (IOException e) {
-            // e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
         } finally {

@@ -6,18 +6,16 @@ import java.io.IOException;
 
 
 //Client to server status service occupation message
-public class StCErrorMsg {
+public class WtSErrorMsg implements WtSMsg {
     private static final byte opcode = 1; // value to distinguish message server side
-    private int clientId;
     private int requestN; // request number (in clients pov) 
     private String error; // error info
 
-    public StCErrorMsg() {
+    public WtSErrorMsg() {
         // n faz nada, preencher com setters
     }
 
-    public StCErrorMsg(int clientId, int requestN, String error) {
-        this.clientId = clientId;
+    public WtSErrorMsg(int requestN, String error) {
         this.requestN = requestN;
         this.error = error;
     }
@@ -26,7 +24,6 @@ public class StCErrorMsg {
     public void serialize(DataOutputStream dos) throws IOException{
         dos.writeByte(opcode);
 
-        dos.writeInt(this.clientId);
         dos.writeInt(this.requestN);
         byte[] data = this.error.getBytes("UTF-8");
         dos.writeInt(this.error.length());
@@ -36,15 +33,10 @@ public class StCErrorMsg {
 
     //deserialize assumes opcode was previously read, only uses information after opcode
     public void deserialize(DataInputStream dis) throws IOException{
-        this.setClientId(dis.readInt());
         this.setRequestN(dis.readInt());
         byte[] data = new byte[dis.readInt()];
         dis.readFully(data);
         this.setError(new String(data,"UTF-8"));
-    }
-
-    private int getClientId() {
-        return this.clientId;
     }
 
     private int getRequestN() {
@@ -53,10 +45,6 @@ public class StCErrorMsg {
 
     private String getError() {
         return this.error;
-    }
-
-    private void setClientId(int clientId) {
-        this.clientId = clientId;
     }
 
     private void setRequestN(int requestN) {

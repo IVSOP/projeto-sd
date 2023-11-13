@@ -5,7 +5,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 ////Client to server status request message
-public class CtSStatusMsg implements IMessage {
+public class CtSStatusMsg implements CtSMsg {
     private static final byte opcode = 1; // value to distinguish message server side
     private int requestN; // request number (in clients pov)
 
@@ -20,7 +20,7 @@ public class CtSStatusMsg implements IMessage {
     //serialize sends msgType before data, for server msg distinction!!
     public void serialize(DataOutputStream dos) throws IOException{
         dos.writeByte(opcode);
-        
+
         dos.writeInt(this.requestN);
         dos.flush();
     }

@@ -6,7 +6,7 @@ import java.io.IOException;
 
 
 //Client to server status service occupation message
-public class StCExecMsg {
+public class StCExecMsg implements StCMsg {
     private static final byte opcode = 0; // value to distinguish message client side
     private int requestN; // request number (in clients pov) 
     private byte[] data; // output data

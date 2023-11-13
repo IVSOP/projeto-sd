@@ -6,7 +6,7 @@ import java.io.IOException;
 
 
 //Client to server authentication and register message
-public class CtSAutMsg implements IMessage {
+public class CtSAutMsg {
     private String name;
     private String password;
 

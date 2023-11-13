@@ -4,9 +4,10 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+// possivelmente elimiar esta classe e mandar só a string de erro no byte[] do StCExecMsg
 
 //Client to server status service occupation message
-public class StCErrorMsg {
+public class StCErrorMsg implements StCMsg {
     private static final byte opcode = 2; // value to distinguish message server side
     private int requestN; // request number (in clients pov) 
     private String error; // error info

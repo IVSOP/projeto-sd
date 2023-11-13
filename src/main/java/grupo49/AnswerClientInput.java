@@ -47,7 +47,7 @@ public class AnswerClientInput implements Runnable {
 				// register/login client, get his ID or return error if wrong password
 				//////////////////////////
 
-				BoundedBuffer<ClientMessage<IMessage>> outputBuffer = new BoundedBuffer<>(Server.localOutputBufferClientSize);
+				BoundedBuffer<StCMsg> outputBuffer = new BoundedBuffer<>(Server.localOutputBufferClientSize);
 				server.putClientOutputBuffer(clientID, outputBuffer); // allocate buffer for this client on the server
 	
 				Thread outThread = new Thread(new AnswerClientOutput(out, outputBuffer)); // thread writing to the socket

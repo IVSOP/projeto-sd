@@ -1,10 +1,10 @@
 package grupo49;
 
 public class WorkerWorkRunnable implements Runnable {
-	BoundedBuffer<...> inputBuffer;
-	BoundedBuffer<...> outputBuffer;
+	BoundedBuffer<ClientMessage<StWMsg>> inputBuffer;
+	BoundedBuffer<ClientMessage<WtSMsg>> outputBuffer;
 
-	public WorkerWorkRunnable(BoundedBuffer<...> inputBuffer, BoundedBuffer<...> outputBuffer) {
+	public WorkerWorkRunnable(BoundedBuffer<ClientMessage<StWMsg>> inputBuffer, BoundedBuffer<ClientMessage<WtSMsg>> outputBuffer) {
 		this.inputBuffer = inputBuffer;
 		this.outputBuffer = outputBuffer;
 	}
