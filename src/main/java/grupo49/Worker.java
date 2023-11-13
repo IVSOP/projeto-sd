@@ -15,12 +15,12 @@ public class Worker
 	BoundedBuffer<ClientMessage<StWMsg>> inputBuffer;
 	BoundedBuffer<ClientMessage<WtSMsg>> outputBuffer;
 
-	public Worker() {
+	public Worker(String serverAddress) {
 		this.inputBuffer = new BoundedBuffer<ClientMessage<StWMsg>>(inputBufferSize);
 		this.outputBuffer = new BoundedBuffer<ClientMessage<WtSMsg>>(outputBufferSize);
 
 		try {
-			this.socket = new Socket("localhost", Server.PortToWorker);
+			this.socket = new Socket(serverAddress, Server.PortToWorker);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

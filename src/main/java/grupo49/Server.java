@@ -68,13 +68,11 @@ public class Server
 
 	// faz ele proprio lock
 	public BoundedBuffer<StCMsg> getClientOutputBuffer(int clientID) {
-		BoundedBuffer<StCMsg> ret = null;
 		try {
 			clientOutputBufferMapLock.readLock().lock();
 
-			ret = clientOutputBufferMap.get(clientID);
+			return clientOutputBufferMap.get(clientID);
 
-			return ret;
 		} finally {
 			clientOutputBufferMapLock.readLock().unlock();
 		}
