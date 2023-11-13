@@ -1,16 +1,9 @@
 package grupo49;
 
-import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.concurrent.TimeUnit;
-
-import grupo49.CtSAutMsg;
-import grupo49.CtSExecMsg;
-import grupo49.StCStatusMsg;
 
 /**
  * Hello world!
@@ -22,7 +15,7 @@ public class Client
     {
         System.out.println( "Hello World client!" );
         try {
-            Socket socket = new Socket("localhost", 12345); // o host é conhecido do lado do cliente, neste caso o host do servidor é "localhost"
+            Socket socket = new Socket("localhost", Server.PortToClient); // o host é conhecido do lado do cliente, neste caso o host do servidor é "localhost"
 
             DataInputStream in = new DataInputStream(socket.getInputStream());
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
