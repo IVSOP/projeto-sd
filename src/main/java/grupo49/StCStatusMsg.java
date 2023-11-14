@@ -7,7 +7,7 @@ import java.io.IOException;
 
 //Client to server status service occupation message
 public class StCStatusMsg implements StCMsg {
-    private static final byte opcode = 1; // value to distinguish message server side
+    private static final byte opcode = 2; // value to distinguish message server side
     private int requestN; // request number (in clients pov) 
     private int mem; // availabe memory
     private int pending; // number of pending tasks
@@ -39,15 +39,15 @@ public class StCStatusMsg implements StCMsg {
         this.setPending(dis.readInt());
     }
 
-    private int getRequestN() {
+    public int getRequestN() {
         return this.requestN;
     }
 
-    private int getMem() {
+    public int getMem() {
         return this.mem;
     }
 
-    private int getPending() {
+    public int getPending() {
         return this.pending;
     }
 
@@ -64,4 +64,12 @@ public class StCStatusMsg implements StCMsg {
         this.pending = pending;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("reqN: " + this.requestN);
+        sb.append("mem: " + this.mem);
+        sb.append("pending: " + this.pending);
+        return sb.toString();
+    }
 }

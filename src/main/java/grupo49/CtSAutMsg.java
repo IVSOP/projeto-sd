@@ -20,23 +20,15 @@ public class CtSAutMsg {
     }
 
     public void serialize(DataOutputStream dos) throws IOException{
-        byte[] data = this.name.getBytes("UTF-8");
-        dos.writeInt(this.name.length());
-        dos.write(data);
-        data = this.password.getBytes("UTF-8");
-        dos.writeInt(this.password.length());
-        dos.write(data); 
+        dos.writeUTF(this.name);
+        dos.writeUTF(this.password);
         dos.flush();
     }
 
     //deserialize assumes opcode was previously read, only uses information after opcode
     public void deserialize(DataInputStream dis) throws IOException {
-        byte[] data = new byte[dis.readInt()];
-        dis.readFully(data);
-        this.setName(new String(data,"UTF-8"));
-        data = new byte[dis.readInt()];
-        dis.readFully(data);
-        this.setPassword(new String(data,"UTF-8"));
+        this.setName(dis.readUTF());
+        this.setPassword(dis.readUTF());
     }
 
     public String getName() {
@@ -47,11 +39,11 @@ public class CtSAutMsg {
         return this.password;
     }
 
-    public void setName(String name) {
+    private void setName(String name) {
         this.name = name;
     }
 
-    public void setPassword(String pass) {
+    private void setPassword(String pass) {
         this.password = pass;
     }
 

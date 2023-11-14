@@ -3,6 +3,7 @@ package grupo49;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 
 public class StWExecMsg {
@@ -19,7 +20,6 @@ public class StWExecMsg {
     }
 
     public void serialize(DataOutputStream dos) throws IOException{
-
         dos.writeInt(this.requestN);
         dos.writeInt(this.data.length);
         dos.write(this.data);
@@ -28,18 +28,18 @@ public class StWExecMsg {
 
     //deserialize assumes opcode was previously read, only uses information after opcode
     public void deserialize(DataInputStream dis) throws IOException{
-        
         this.setRequestN(dis.readInt());
-        byte[] data = new byte[dis.readInt()];
-        dis.readFully(data);
+        int arrSize = dis.readInt();
+        byte[] data = new byte[arrSize];
+        dis.readFully(data,0,arrSize);
         this.setData(data);
     }
 
-    private int getRequestN() {
+    public int getRequestN() {
         return this.requestN;
     }
 
-    private byte[] getData() {
+    public byte[] getData() {
         return this.data;
     }
 
@@ -49,6 +49,20 @@ public class StWExecMsg {
 
     private void setData(byte[] data) {
         this.data = data;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(" reqN: " + this.requestN);
+        String byteData = "data..";
+        try {
+            byteData = new String(this.data,"UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        sb.append(" data in stringFormat: " + byteData);
+        return sb.toString();
     }
 
 }

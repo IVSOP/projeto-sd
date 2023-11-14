@@ -2,17 +2,38 @@ package grupo49;
 
 public class WorkerWorkRunnable implements Runnable {
 	BoundedBuffer<ClientMessage<StWMsg>> inputBuffer;
-	BoundedBuffer<ClientMessage<WtSMsg>> outputBuffer;
+	BoundedBuffer<ClientMessage<StCMsg>> outputBuffer;
 
-	public WorkerWorkRunnable(BoundedBuffer<ClientMessage<StWMsg>> inputBuffer, BoundedBuffer<ClientMessage<WtSMsg>> outputBuffer) {
+	public WorkerWorkRunnable(BoundedBuffer<ClientMessage<StWMsg>> inputBuffer, BoundedBuffer<ClientMessage<StCMsg>> outputBuffer) {
 		this.inputBuffer = inputBuffer;
 		this.outputBuffer = outputBuffer;
 	}
 
 	@Override
 	public void run() {
-		while (true) {
-			// pop do input buffer e fazer trabalho. meter resposta no outputBuffer
+		try {
+			while (true) {
+				ClientMessage<StWMsg> inputMsg = inputBuffer.pop();
+
+				// não há mais mensagens StW por isso não é preciso switch com opcode, para já pelo menos
+				StWExecMsg msg = (StWExecMsg) inputMsg.getMessage(); 
+				byte[] data = msg.getData();
+				int requestN = msg.getRequestN();
+
+				// do work with previous values
+				
+				StCMsg innerMsg = null;
+				
+				//se work result deu erro
+				// finalMsg = new StCErrorMsg(requestN, errorMsg);
+				// //se work não deu erro
+				// finalMsg = new StCExecMsg(requestN, newData);
+
+				ClientMessage<StCMsg> finalMsg = new ClientMessage<>(inputMsg.getClient(), innerMsg);
+				this.outputBuffer.push(finalMsg);
+			}
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 	}
 }

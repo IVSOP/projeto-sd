@@ -13,11 +13,11 @@ public class Worker
 
 	private Socket socket; // socket to server
 	BoundedBuffer<ClientMessage<StWMsg>> inputBuffer;
-	BoundedBuffer<ClientMessage<WtSMsg>> outputBuffer;
+	BoundedBuffer<ClientMessage<StCMsg>> outputBuffer;
 
 	public Worker(String serverAddress) {
 		this.inputBuffer = new BoundedBuffer<ClientMessage<StWMsg>>(inputBufferSize);
-		this.outputBuffer = new BoundedBuffer<ClientMessage<WtSMsg>>(outputBufferSize);
+		this.outputBuffer = new BoundedBuffer<ClientMessage<StCMsg>>(outputBufferSize);
 
 		try {
 			this.socket = new Socket(serverAddress, Server.PortToWorker);

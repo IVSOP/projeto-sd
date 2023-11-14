@@ -6,9 +6,11 @@ import java.io.IOException;
 
 // possivelmente elimiar esta classe e mandar só a string de erro no byte[] do StCExecMsg
 
-//Client to server status service occupation message
+//Server to client error occured msg
+// this message type is also used from worker to server, since message is the same
+
 public class StCErrorMsg implements StCMsg {
-    private static final byte opcode = 2; // value to distinguish message server side
+    private static final byte opcode = 1; // value to distinguish message server side
     private int requestN; // request number (in clients pov) 
     private String error; // error info
 
@@ -26,25 +28,21 @@ public class StCErrorMsg implements StCMsg {
         dos.writeByte(opcode);
 
         dos.writeInt(this.requestN);
-        byte[] data = this.error.getBytes("UTF-8");
-        dos.writeInt(this.error.length());
-        dos.write(data);
+        dos.writeUTF(this.error);
         dos.flush();
     }
 
     //deserialize assumes opcode was previously read, only uses information after opcode
     public void deserialize(DataInputStream dis) throws IOException{
         this.setRequestN(dis.readInt());
-        byte[] data = new byte[dis.readInt()];
-        dis.readFully(data);
-        this.setError(new String(data,"UTF-8"));
+        this.setError(dis.readUTF());
     }
 
-    private int getRequestN() {
+    public int getRequestN() {
         return this.requestN;
     }
 
-    private String getError() {
+    public String getError() {
         return this.error;
     }
 
@@ -56,4 +54,11 @@ public class StCErrorMsg implements StCMsg {
         this.error = error;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("reqN: " + this.requestN);
+        sb.append("error: +" + this.error);
+        return sb.toString();
+    }
 }

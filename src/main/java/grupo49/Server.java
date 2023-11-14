@@ -14,6 +14,32 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public class Server 
 {
+	/////////////////////////////////////// CLIENTE ///////////////////////////////////////
+	public class ClientData {
+		public String password;
+		public int ID;
+		// email nao e preciso, fica inferido
+
+		public ClientData(String _password, int _ID) {
+			this.password = _password;
+			this.ID = _ID;
+		}
+	}
+
+	public static final int PortToClient = 12345;
+	public static final int inputBufferClientSize = 100;
+	public static final int localOutputBufferClientSize = 10; // local porque ha 1 por cliente
+
+	private ServerSocket socketToClients;
+	private BoundedBuffer<ClientMessage<CtSMsg>> inputBufferClient; // client requests are all written to this buffer
+
+	//client related #######
+	private int clientID_counter; // counter to assign new client ID. does not have lock since the lock for clientEmailMap is used
+	private Map<String, ClientData> clientEmailMap; // email, dados do cliente
+	private ReentrantReadWriteLock clientEmailMapLock;
+	private Map<Integer, BoundedBuffer<StCMsg>> clientOutputBufferMap; // buffers de output para os clientes
+	private ReentrantReadWriteLock clientOutputBufferMapLock; 
+
 	public Server() {
 		this.clientID_counter = 0;
 		this.clientEmailMap = new HashMap<String, ClientData>();
@@ -38,33 +64,8 @@ public class Server
 		}
 	}
 
-	/////////////////////////////////////// CLIENTE ///////////////////////////////////////
-	public class ClientData {
-		public String password;
-		public int ID;
-		// email nao e preciso, fica inferido
-
-		public ClientData(String _password, int _ID) {
-			this.password = _password;
-			this.ID = _ID;
-		}
-	}
-
-	public static final int PortToClient = 12345;
-	public static final int inputBufferClientSize = 100;
-	public static final int localOutputBufferClientSize = 10; // local porque ha 1 por cliente
-
-	private ServerSocket socketToClients;
-	private BoundedBuffer<ClientMessage<CtSMsg>> inputBufferClient; // client requests are all written to this buffer
-
-	private int clientID_counter; // counter to assign new client ID. does not have lock since the lock for clientEmailMap is used
-
-	private Map<String, ClientData> clientEmailMap; // email, dados do cliente
-	private ReentrantReadWriteLock clientEmailMapLock;
-	private Map<Integer, BoundedBuffer<StCMsg>> clientOutputBufferMap; // buffers de output para os clientes
-	private ReentrantReadWriteLock clientOutputBufferMapLock;
-
-	public void registerClient(String email, String password) {
+	//returns client assigned ID
+	public int registerClient(String email, String password) {
 		try {
 			clientEmailMapLock.writeLock().lock();
 	
@@ -73,7 +74,7 @@ public class Server
 			
 			// adicionar infos
 			clientEmailMap.put(email, data);
-
+			return clientID_counter;
 		} finally {
 			clientEmailMapLock.writeLock().unlock();
 		}
@@ -132,15 +133,14 @@ public class Server
 	public static final int localOutputBufferWorkerSize = 10; // local porque ha 1 por worker
 
 	private ServerSocket socketToWorkers;
-	private BoundedBuffer<...> inputBufferWorker;
-
+	private BoundedBuffer<ClientMessage<StCMsg>> inputBufferWorker; // buffer onde workers colocam resultados de queries
 	private Map<InetAddress, WorkerData> workerInfoMap;
 	private ReentrantReadWriteLock workerInfoMapLock;
-	private Map<InetAddress, BoundedBuffer<...>> workerOutputBufferMap;
+	private Map<InetAddress, BoundedBuffer<ClientMessage<StWMsg>>> workerOutputBufferMap; // buffers onde se coloca requests para worker processar
 	private ReentrantReadWriteLock workerOutputBufferMapLock;
 
 	// returns a worker's ouput buffer, you can use it freely
-	public BoundedBuffer<...> getWorkerOutputBuffer(InetAddress address) {
+	public BoundedBuffer<ClientMessage<StWMsg>> getWorkerOutputBuffer(InetAddress address) {
 		try {
 			workerOutputBufferMapLock.readLock().lock();
 
@@ -151,7 +151,7 @@ public class Server
 	}
 
 	// assign an output buffer to a worker (it does not create it)
-	public void putWorkerOutputBuffer(InetAddress address, BoundedBuffer<...> buff) {
+	public void putWorkerOutputBuffer(InetAddress address, BoundedBuffer<ClientMessage<StWMsg>> buff) {
 		try {
 			workerOutputBufferMapLock.writeLock().lock();
 
@@ -185,7 +185,7 @@ public class Server
 	}
 
 	// push message into global input buffer for workers
-	public void pushInputBufferWorker(... message) {
+	public void pushInputBufferWorker(ClientMessage<StCMsg> message) {
 		try {
 			inputBufferWorker.push(message);
 		} catch (Exception e) {

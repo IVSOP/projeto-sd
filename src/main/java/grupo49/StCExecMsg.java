@@ -3,9 +3,11 @@ package grupo49;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 
-//Client to server status service occupation message
+//Server to client exec msg
+//Also used on worker to server, since message is the same
 public class StCExecMsg implements StCMsg {
     private static final byte opcode = 0; // value to distinguish message client side
     private int requestN; // request number (in clients pov) 
@@ -33,13 +35,13 @@ public class StCExecMsg implements StCMsg {
     //deserialize assumes opcode was previously read, only uses information after opcode
     public void deserialize(DataInputStream dis) throws IOException{
         this.setRequestN(dis.readInt());
-        byte[] data = new byte[dis.readInt()];
-        dis.readFully(data);
+        int arrSize = dis.readInt();
+        byte[] data = new byte[arrSize];
+        dis.readFully(data,0,arrSize);
         this.setData(data);
-
     }
 
-    private int getRequestN() {
+    public int getRequestN() {
         return this.requestN;
     }
 
@@ -53,6 +55,20 @@ public class StCExecMsg implements StCMsg {
 
     private void setData(byte[] data) {
         this.data = data;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(" reqN: " + this.requestN);
+        String byteData = "data..";
+        try {
+            byteData = new String(this.data,"UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        sb.append(" data in stringFormat: " + byteData);
+        return sb.toString();
     }
 }
 

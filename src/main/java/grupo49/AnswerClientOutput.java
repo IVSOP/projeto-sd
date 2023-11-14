@@ -19,9 +19,7 @@ public class AnswerClientOutput implements Runnable {
         try {
             while (true) {
 				StCMsg message = outputBuffer.pop();
-
 				message.serialize(out);
-				// out.flush();
 			}
             
         } catch (IOException e) {

@@ -43,8 +43,17 @@ public class AnswerClientInput implements Runnable {
 			int clientID = -1; // -1 para o java ficar contente, vou assumir que e impossivel chegar a exception sem ter mudado de valor
 	
 			try {
-				// READ FIRST MESSAGE HERE
-				// register/login client, get his ID or return error if wrong password
+				byte opcode;
+				CtSAutMsg authMsg = null; // message received from client
+
+				// Authenticate client first
+				authMsg = new CtSAutMsg();
+				authMsg.deserialize(in);
+				System.out.println(authMsg.toString()); // debug
+				int clientN = server.registerClient(authMsg.getName(), authMsg.getPassword());
+
+				// how to detect wrong pasword?
+				// login client, get his ID or return error if wrong password
 				//////////////////////////
 
 				BoundedBuffer<StCMsg> outputBuffer = new BoundedBuffer<>(Server.localOutputBufferClientSize);
@@ -53,9 +62,27 @@ public class AnswerClientInput implements Runnable {
 				Thread outThread = new Thread(new AnswerClientOutput(out, outputBuffer)); // thread writing to the socket
 				outThread.start();
 	
+				CtSMsg baseMsg = null;
+				ClientMessage<CtSMsg> msgToPush = new ClientMessage<>(); // message received from client with clientID
+
 				while (true) {
-					// receber dados da socket e colocar no buffer do servidor, usar pushInputBufferClient
-					in.readByte();
+					// receber dados da socket e colocar no buffer do servidor
+					opcode = in.readByte();
+					switch (opcode) {
+						case 0:
+							baseMsg = new CtSExecMsg();
+							baseMsg.deserialize(in);
+							System.out.println(baseMsg.toString()); // debug
+							break;
+						case 1: 
+							baseMsg = new CtSStatusMsg();
+							baseMsg.deserialize(in);
+							System.out.println(baseMsg.toString()); // debug
+							break;
+					}
+					msgToPush.setClient(clientN);
+					msgToPush.setMessage(baseMsg);
+					server.pushInputBufferClient(msgToPush); // push message to global server input array
 				}
 	
 			} catch (EOFException e) { // chamada quando socket fecha do outro lado e temos erro a dar read

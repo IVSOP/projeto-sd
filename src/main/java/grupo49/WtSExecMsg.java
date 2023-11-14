@@ -4,7 +4,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-
+//Worker to server exec msg
 public class WtSExecMsg implements WtSMsg {
     private static final byte opcode = 0; // value to distinguish message server side
     private int requestN; // request number (in clients pov) 
@@ -21,7 +21,7 @@ public class WtSExecMsg implements WtSMsg {
 
     //serialize sends msgType before data, for server msg distinction!!
     public void serialize(DataOutputStream dos) throws IOException{
-        dos.writeInt(opcode);
+        dos.writeByte(opcode);
 
         dos.writeInt(this.requestN);
         dos.writeInt(this.data.length);
@@ -32,19 +32,20 @@ public class WtSExecMsg implements WtSMsg {
     //deserialize assumes opcode was previously read, only uses information after opcode
     public void deserialize(DataInputStream dis) throws IOException{
         this.setRequestN(dis.readInt());
-        byte[] data = new byte[dis.readInt()];
+        int arrSize = dis.readInt();
+        byte[] data = new byte[arrSize];
         dis.readFully(data);
         this.setData(data);
     }
 
-    private int getRequestN() {
+    public int getRequestN() {
         return this.requestN;
     }
 
-    private byte[] getData() {
+    public byte[] getData() {
         return this.data;
     }
-
+    
     private void setRequestN(int requestN) {
         this.requestN = requestN;
     }

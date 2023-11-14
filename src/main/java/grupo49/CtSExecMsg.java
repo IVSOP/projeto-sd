@@ -17,7 +17,7 @@ public class CtSExecMsg implements CtSMsg {
         // n faz nada, preencher com setters
     }
 
-    public CtSExecMsg(byte[] bArray, int mem, int requestN) {
+    public CtSExecMsg(int requestN, int mem, byte[] bArray) {
         this.requestN = requestN;
         this.mem = mem;
         this.data = bArray; //bArray.clone()?
@@ -26,6 +26,7 @@ public class CtSExecMsg implements CtSMsg {
     //serialize sends msgType before data, for server msg distinction!!
     public void serialize(DataOutputStream dos) throws IOException{
         dos.writeByte(opcode);
+
         dos.writeInt(this.requestN);
         dos.writeInt(this.mem);
         dos.writeInt(this.data.length);
@@ -37,8 +38,9 @@ public class CtSExecMsg implements CtSMsg {
     public void deserialize(DataInputStream dis) throws IOException {
         this.setRequestN(dis.readInt());
         this.setMem(dis.readInt());
-        byte[] data = new byte[dis.readInt()];
-        dis.readFully(data);
+        int arrSize = dis.readInt();
+        byte[] data = new byte[arrSize];
+        dis.readFully(data,0,arrSize);
         this.setData(data);
     }
 
@@ -54,11 +56,11 @@ public class CtSExecMsg implements CtSMsg {
         return this.requestN;
     }
 
-    public void setData(byte[] data) {
+    private void setData(byte[] data) {
         this.data = data;
     }
 
-    public void setMem(int mem) {
+    private void setMem(int mem) {
         this.mem = mem;
     }
 
@@ -69,17 +71,15 @@ public class CtSExecMsg implements CtSMsg {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        String byteData = null;
+        sb.append(" reqN: " + this.requestN);
+        sb.append(" mem: " + this.mem);
+        String byteData = "data..";
         try {
         byteData = new String(this.data,"UTF-8");
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
         sb.append(" data in stringFormat: " + byteData);
-        sb.append(" mem: " + this.mem);
-        sb.append(" reqN: " + this.requestN);
         return sb.toString();
     }
-
-
 }

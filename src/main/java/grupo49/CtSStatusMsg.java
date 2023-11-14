@@ -3,6 +3,7 @@ package grupo49;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 ////Client to server status request message
 public class CtSStatusMsg implements CtSMsg {
@@ -36,5 +37,12 @@ public class CtSStatusMsg implements CtSMsg {
 
     public void setRequestN(int reqN) {
         this.requestN = reqN;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(" reqN: " + this.requestN);
+        return sb.toString();
     }
 }

@@ -10,7 +10,10 @@ import java.io.IOException;
     public void deserialize(DataInputStream dis) throws IOException;
 }
 
-interface CtSMsg extends IMessage {};
+interface CtSMsg extends IMessage {
+    public void setRequestN(int reqN);
+}
+
 interface StCMsg extends IMessage {};
 interface WtSMsg extends IMessage {};
 interface StWMsg extends IMessage {}; // na prática só existe StWExecMsg, mas permite expansão no futuro

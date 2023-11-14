@@ -26,7 +26,7 @@ public class HandleWorkerInput implements Runnable {
 			DataInputStream in = new DataInputStream(socket.getInputStream());
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-			BoundedBuffer<...> outputBuffer = new BoundedBuffer<>(Server.localOutputBufferWorkerSize);
+			BoundedBuffer<ClientMessage<StWMsg>> outputBuffer = new BoundedBuffer<>(Server.localOutputBufferWorkerSize);
 
 			server.putWorkerOutputBuffer(address, outputBuffer);
 
@@ -36,7 +36,9 @@ public class HandleWorkerInput implements Runnable {
 			try {
 				// ler da socket e meter no input buffer do servidor, usar pushInputBufferWorker
 				while(true) {
-					in.readByte();
+					ClientMessage<StCMsg> msg = new ClientMessage<>();
+					msg.deserialize(in);
+					server.pushInputBufferWorker(msg);
 				}
 			} catch (EOFException e) { // chamada quando socket fecha do outro lado e temos erro a dar read
 				in.close();
@@ -52,4 +54,4 @@ public class HandleWorkerInput implements Runnable {
 	}
 }
 
-falta separar mainLoop em 2 funcs
+// falta separar mainLoop em 2 funcs
