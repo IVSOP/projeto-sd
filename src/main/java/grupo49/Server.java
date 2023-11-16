@@ -6,6 +6,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -14,38 +16,30 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public class Server 
 {
-	/////////////////////////////////////// CLIENTE ///////////////////////////////////////
-	public class ClientData {
-		public String password;
-		public int ID;
-		// email nao e preciso, fica inferido
-
-		public ClientData(String _password, int _ID) {
-			this.password = _password;
-			this.ID = _ID;
-		}
-	}
+	/////////////////////////////////////// CLIENT ///////////////////////////////////////
+	// ClientData foi colocado no seu proprio ficheiro, para ser tudo public
 
 	public static final int PortToClient = 12345;
 	public static final int inputBufferClientSize = 100;
 	public static final int localOutputBufferClientSize = 10; // local porque ha 1 por cliente
-
+	
 	private ServerSocket socketToClients;
 	private BoundedBuffer<ClientMessage<CtSMsg>> inputBufferClient; // client requests are all written to this buffer
+	
+	private int clientID_counter; // counter to assign new client ID. does not have lock since the lock for clientMap is used
+	private Map<Integer, ClientData> clientMap; // ID -> dados
+	private ReentrantReadWriteLock clientMapLock;
+	// private Map<Integer, BoundedBuffer<StCMsg>> clientOutputBufferMap; // buffers de output para os clientes (passou para o ClientData em si)
+	// private ReentrantReadWriteLock clientOutputBufferMapLock;
 
-	//client related #######
-	private int clientID_counter; // counter to assign new client ID. does not have lock since the lock for clientEmailMap is used
-	private Map<String, ClientData> clientEmailMap; // email, dados do cliente
-	private ReentrantReadWriteLock clientEmailMapLock;
-	private Map<Integer, BoundedBuffer<StCMsg>> clientOutputBufferMap; // buffers de output para os clientes
-	private ReentrantReadWriteLock clientOutputBufferMapLock; 
+	private int MaxJobsPerClient;
 
 	public Server() {
 		this.clientID_counter = 0;
-		this.clientEmailMap = new HashMap<String, ClientData>();
-		this.clientEmailMapLock = new ReentrantReadWriteLock();
-		this.clientOutputBufferMap = new HashMap<Integer, BoundedBuffer<StCMsg>>();
-		this.clientOutputBufferMapLock = new ReentrantReadWriteLock(); // (true)??????????????????
+		this.clientMap = new HashMap<>();
+		this.clientMapLock = new ReentrantReadWriteLock();
+		// this.clientOutputBufferMap = new HashMap<Integer, BoundedBuffer<StCMsg>>();
+		// this.clientOutputBufferMapLock = new ReentrantReadWriteLock();
 		this.inputBufferClient = new BoundedBuffer<ClientMessage<CtSMsg>>(Server.inputBufferClientSize);
 
 		this.workerInfoMap = new HashMap<>();
@@ -53,6 +47,8 @@ public class Server
 		this.workerOutputBufferMap = new HashMap<>();
 		this.workerOutputBufferMapLock = new ReentrantReadWriteLock();
 		this.inputBufferWorker = new BoundedBuffer<>(Server.inputBufferWorkerSize);
+
+		this.MaxJobsPerClient = 5;
 
 		try {
 			this.socketToClients = new ServerSocket(Server.PortToClient);
@@ -64,63 +60,75 @@ public class Server
 		}
 	}
 
-	//returns client assigned ID
-	public int registerClient(String email, String password) {
+	public ClientData getClient(int clientID) {
 		try {
-			clientEmailMapLock.writeLock().lock();
-	
-			ClientData data = new ClientData(password, clientID_counter);
-			clientID_counter++;
+			clientMapLock.readLock().lock();
+
+			return clientMap.get(clientID);
+		} finally {
+			clientMapLock.readLock().unlock();
+		}
+	}
+
+	// returns created ClientData
+	// OUTPUT BUFFER IS NOT CREATED
+	public ClientData registerClient(String email, String password) {
+		try {
+			clientMapLock.writeLock().lock();
+
+			ClientData data = new ClientData(email, password, clientID_counter);
 			
 			// adicionar infos
-			clientEmailMap.put(email, data);
-			return clientID_counter;
+			clientMap.put(clientID_counter, data);
+			clientID_counter++;
+
+			return data;
 		} finally {
-			clientEmailMapLock.writeLock().unlock();
-		}
-	}
-
-	// returns a client's output buffer, you can use it freely
-	public BoundedBuffer<StCMsg> getClientOutputBuffer(int clientID) {
-		try {
-			clientOutputBufferMapLock.readLock().lock();
-
-			return clientOutputBufferMap.get(clientID);
-
-		} finally {
-			clientOutputBufferMapLock.readLock().unlock();
-		}
-	}
-
-	// assign an output buffer to a client (it does not create it)
-	public void putClientOutputBuffer(int clientID, BoundedBuffer<StCMsg> buff) {
-		try {
-			clientOutputBufferMapLock.writeLock().lock();
-
-			clientOutputBufferMap.put(clientID, buff);
-		} finally {
-			clientOutputBufferMapLock.writeLock().unlock();
-		}
-	}
-
-	// remove a client's output buffer
-	public void removeClientOutputBuffer(int clientID) {
-		try {
-			clientOutputBufferMapLock.writeLock().lock();
-
-			clientOutputBufferMap.remove(clientID);
-		} finally {
-			clientOutputBufferMapLock.writeLock().unlock();
+			clientMapLock.writeLock().unlock();
 		}
 	}
 
 	// push message into global input buffer for clients
-	public void pushInputBufferClient(ClientMessage<CtSMsg> message) {
+	// WILL BLOCK if the client has exceeded number of jobs it can have
+	// ClientData is passed for efficieny, avoiding a loopkup in the map of all clients
+	public void pushInputBufferClient(ClientMessage<CtSMsg> message, ClientData clientInfo) {
 		try {
+			clientInfo.serverPushLock.lock();
+
+			while (clientInfo.n_currentJobs >= MaxJobsPerClient) {
+				// client sent too many requests too quick, will have to stay blocked until other jobs finish
+				clientInfo.permissionToPush.await();
+			}
+
 			inputBufferClient.push(message);
+			clientInfo.n_currentJobs ++;
 		} catch (Exception e) {
 			e.printStackTrace();
+		} finally {
+			clientInfo.serverPushLock.lock();
 		}
+	}
+
+	// server pushes message to a client
+	// client is specified within the message itself (??????????????????????????????????????????????????????????????????????????????????????????????????)
+	public void pushClientOutput(StCMsg message) {
+		int clientID = -1; // FALTA ISTO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		ClientData clientInfo = getClient(clientID);
+		try {
+			clientInfo.serverPushLock.lock(); // precisamos da lock para alterar a variavel n_currentJobs
+
+			clientInfo.n_currentJobs --;
+			clientInfo.permissionToPush.signal(); // acordar 1 thread que esteja a esperar
+
+			clientInfo.serverPushLock.unlock(); // deixar isto num finally ???????
+
+			clientInfo.outputBuffer.push(message);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		// clientInfo.n_currentJobs --;
+		// wakeup a thread
+		// mandar para output buffer
 	}
 
 	/////////////////////////////////////// WORKER ///////////////////////////////////////
@@ -197,6 +205,7 @@ public class Server
 	public class ClientLoop implements Runnable {
 		ServerSocket socketToClients;
 		Server server;
+
 		public ClientLoop(ServerSocket socketToClients, Server server) {
 			this.socketToClients = socketToClients;
 			this.server = server;
