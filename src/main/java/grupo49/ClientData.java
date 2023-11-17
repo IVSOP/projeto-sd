@@ -12,7 +12,7 @@ public class ClientData {
 		public String password;
 		public int ID;
 		// ID continua a ser preciso nuns casos especificos
-		public String email;
+		public String name;
 
 		// lock e condition para termos permissao para dar push no input buffer do servidor
 		public ReentrantLock serverPushLock;
@@ -25,22 +25,23 @@ public class ClientData {
 
 		public BoundedBuffer<StCMsg> outputBuffer;
 
-		public ClientData(String email, String password, int ID) {
+		public ClientData(String name, String password, int ID) {
 			this.password = password;
 			this.ID = ID;
-			this.email = email;
+			this.name = name;
 			this.serverPushLock = new ReentrantLock();
 			this.permissionToPush = serverPushLock.newCondition();
 			this.n_currentJobs = 0;
 			this.outputBuffer = new BoundedBuffer<>(Server.localOutputBufferClientSize);
 		}
 		
-		// // para poupar memoria
-		// public void createOutputBuffer() {
-		// 	this.outputBuffer = new BoundedBuffer<>(Server.localOutputBufferClientSize);
-		// }
+		// para poupar memoria
+		public void createOutputBuffer() {
+			this.outputBuffer = new BoundedBuffer<>(Server.localOutputBufferClientSize);
+		}
 
 		// para poupar memoria
+		// just sets it to null
 		public void removeOutputBuffer() {
 			this.outputBuffer = null;
 		}

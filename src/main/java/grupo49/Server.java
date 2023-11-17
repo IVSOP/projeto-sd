@@ -6,8 +6,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
+// import java.util.concurrent.locks.Condition;
+// import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -29,6 +29,8 @@ public class Server
 	private int clientID_counter; // counter to assign new client ID. does not have lock since the lock for clientMap is used
 	private Map<Integer, ClientData> clientMap; // ID -> dados
 	private ReentrantReadWriteLock clientMapLock;
+	private Map<String, Integer> clientNameToIDMap;
+	private ReentrantReadWriteLock clientNameToIDMapLock;
 	// private Map<Integer, BoundedBuffer<StCMsg>> clientOutputBufferMap; // buffers de output para os clientes (passou para o ClientData em si)
 	// private ReentrantReadWriteLock clientOutputBufferMapLock;
 
@@ -41,6 +43,9 @@ public class Server
 		// this.clientOutputBufferMap = new HashMap<Integer, BoundedBuffer<StCMsg>>();
 		// this.clientOutputBufferMapLock = new ReentrantReadWriteLock();
 		this.inputBufferClient = new BoundedBuffer<ClientMessage<CtSMsg>>(Server.inputBufferClientSize);
+		this.clientNameToIDMap = new HashMap<>();
+		this.clientNameToIDMapLock = new ReentrantReadWriteLock();
+
 
 		this.workerInfoMap = new HashMap<>();
 		this.workerInfoMapLock = new ReentrantReadWriteLock();
@@ -71,21 +76,61 @@ public class Server
 	}
 
 	// returns created ClientData
-	// OUTPUT BUFFER IS NOT CREATED
-	public ClientData registerClient(String email, String password) {
+	// output buffer is created for the client
+	// carefull, if client already exists, will get replaced and will most likely crash in 3 or 5 threads
+	// no error checking performed
+	public ClientData registerClient(String name, String password) {
 		try {
+			clientNameToIDMapLock.writeLock().lock();
 			clientMapLock.writeLock().lock();
-
-			ClientData data = new ClientData(email, password, clientID_counter);
 			
+			
+			ClientData data = new ClientData(name, password, clientID_counter);
 			// adicionar infos
 			clientMap.put(clientID_counter, data);
+			clientNameToIDMap.put(name, clientID_counter);
 			clientID_counter++;
-
+			
 			return data;
 		} finally {
 			clientMapLock.writeLock().unlock();
+			clientNameToIDMapLock.writeLock().unlock();
 		}
+	}
+
+	public boolean clientExists(String name) {
+		try {
+			clientNameToIDMapLock.readLock().lock();
+			return clientNameToIDMap.containsKey(name);
+		} finally {
+			clientNameToIDMapLock.readLock().unlock();
+		}
+	}
+
+	// output buffer is created for the client
+	// can return null if client does not exist
+	// clients can only login once, no error checking is performed
+	// multiple logins will crash 3 or 4 different threads at least
+	public ClientData loginClient(String name, String password) {
+		try {
+			// temos um 'furo' entre as locks porque sabemos que ID e nome de um cliente nunca mudam,
+			// e que nada de significante vai ser alterado por outras threads
+			clientNameToIDMapLock.readLock().lock();
+			int clientID = clientNameToIDMap.get(name);
+			clientNameToIDMapLock.readLock().unlock();
+
+			clientMapLock.readLock().unlock();
+			ClientData data = clientMap.get(clientID);
+			data.createOutputBuffer(); // !!!!!!!!!!!!!!!!!
+			return data;
+		} finally {
+			clientMapLock.readLock().unlock();
+		}
+	}
+
+	// for now logging means to just 'delete' the outputBuffer of the client 
+	public void logoutClient(ClientData clientInfo) {
+		clientInfo.removeOutputBuffer();
 	}
 
 	// push message into global input buffer for clients
@@ -113,7 +158,7 @@ public class Server
 	// client is specified within the message itself (??????????????????????????????????????????????????????????????????????????????????????????????????)
 	public void pushClientOutput(StCMsg message) {
 		int clientID = -1; // FALTA ISTO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		ClientData clientInfo = getClient(clientID);
+		ClientData clientInfo = getClient(clientID); // NAO USEI TWO PHASE LOCKING PORQUE CLIENTES NUNCA SAO REMOVIDOS
 		try {
 			clientInfo.serverPushLock.lock(); // precisamos da lock para alterar a variavel n_currentJobs
 
@@ -126,9 +171,6 @@ public class Server
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		// clientInfo.n_currentJobs --;
-		// wakeup a thread
-		// mandar para output buffer
 	}
 
 	/////////////////////////////////////// WORKER ///////////////////////////////////////

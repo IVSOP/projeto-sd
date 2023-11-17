@@ -20,15 +20,15 @@ public class Client
 
 	Socket socket;
 
-	String email;
+	String name;
 	String password;
 
-	public Client(String serverAddress, String email, String password) {
+	public Client(String serverAddress, String name, String password) {
 		this.inputBuffer = new BoundedBuffer<StCMsg>(inputBufferSize);
 		this.outputBuffer = new BoundedBuffer<CtSMsg>(outputBufferSize);
 
 		this.requestID = 0;
-		this.email = email;
+		this.name = name;
 		this.password = password;
 
 		try {

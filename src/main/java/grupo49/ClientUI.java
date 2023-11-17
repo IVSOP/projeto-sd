@@ -3,7 +3,7 @@ package grupo49;
 public class ClientUI {
 	public static void main(String args[]) {
 		// receber address do terminal (so apra evitar conflitos como ta tudo em localhost)
-		// receber email e password do terminal
+		// receber nome e password do terminal
 		// criar cliente
 		// loop para permitir enviar pedidos
 			// perguntar se quer dar submit request ou ler uma resposta
