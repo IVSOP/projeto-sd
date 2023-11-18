@@ -1,10 +1,11 @@
 package grupo49;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 // import java.util.concurrent.locks.Condition;
 // import java.util.concurrent.locks.ReentrantLock;
@@ -47,11 +48,10 @@ public class Server
 		this.clientNameToIDMapLock = new ReentrantReadWriteLock();
 
 
-		this.workerInfoMap = new HashMap<>();
-		this.workerInfoMapLock = new ReentrantReadWriteLock();
-		this.workerOutputBufferMap = new HashMap<>();
-		this.workerOutputBufferMapLock = new ReentrantReadWriteLock();
+		this.workerInfo = new ArrayList<>();
+		this.workerInfoLock = new ReentrantReadWriteLock();
 		this.inputBufferWorker = new BoundedBuffer<>(Server.inputBufferWorkerSize);
+		this.workerID_counter = 0;
 
 		this.MaxJobsPerClient = 5;
 
@@ -121,7 +121,7 @@ public class Server
 
 			clientMapLock.readLock().unlock();
 			ClientData data = clientMap.get(clientID);
-			if (data.password == password) {
+			if (data != null && data.password == password) {
 				data.createOutputBuffer(); // !!!!!!!!!!!!!!!!!
 				return data;
 			} else {
@@ -178,9 +178,6 @@ public class Server
 	}
 
 	/////////////////////////////////////// WORKER ///////////////////////////////////////
-	public class WorkerData {
-		// .......
-	}
 
 	public static final int PortToWorker = 12346;
 	public static final int inputBufferWorkerSize = 100;
@@ -188,61 +185,44 @@ public class Server
 
 	private ServerSocket socketToWorkers;
 	private BoundedBuffer<ClientMessage<StCMsg>> inputBufferWorker; // buffer onde workers colocam resultados de queries
-	private Map<InetAddress, WorkerData> workerInfoMap;
-	private ReentrantReadWriteLock workerInfoMapLock;
-	private Map<InetAddress, BoundedBuffer<ClientMessage<StWMsg>>> workerOutputBufferMap; // buffers onde se coloca requests para worker processar
-	private ReentrantReadWriteLock workerOutputBufferMapLock;
+	private ArrayList<WorkerData> workerInfo; // worker ID -> worker info. ArrayList para ser facil de iterar
+	private ReentrantReadWriteLock workerInfoLock;
+	private int workerID_counter;
 
-	// returns a worker's ouput buffer, you can use it freely
-	public BoundedBuffer<ClientMessage<StWMsg>> getWorkerOutputBuffer(InetAddress address) {
+
+	// // returns a worker's ouput buffer, you can use it freely
+	// public BoundedBuffer<ClientMessage<StWMsg>> getWorkerOutputBuffer(InetAddress address) {
+	// 	try {
+	// 		workerOutputBufferMapLock.readLock().lock();
+
+	// 		return workerOutputBufferMap.get(address);
+	// 	} finally {
+	// 		workerOutputBufferMapLock.readLock().unlock();
+	// 	}
+	// }
+
+	// no error checking
+	public WorkerData registerWorker(int memory) {
 		try {
-			workerOutputBufferMapLock.readLock().lock();
-
-			return workerOutputBufferMap.get(address);
+			workerInfoLock.writeLock().lock();
+			WorkerData data = new WorkerData(this.workerID_counter, memory);
+			this.workerInfo.add(workerID_counter, data); // manually add at this index
+			this.workerID_counter ++;
+			return data;
 		} finally {
-			workerOutputBufferMapLock.readLock().unlock();
-		}
-	}
-
-	// assign an output buffer to a worker (it does not create it)
-	public void putWorkerOutputBuffer(InetAddress address, BoundedBuffer<ClientMessage<StWMsg>> buff) {
-		try {
-			workerOutputBufferMapLock.writeLock().lock();
-
-			workerOutputBufferMap.put(address, buff);
-		} finally {
-			workerOutputBufferMapLock.writeLock().unlock();
-		}
-	}
-
-	// remove a worker's output buffer
-	public void removeWorkerOutputBuffer(InetAddress address) {
-		try {
-			workerOutputBufferMapLock.writeLock().lock();
-
-			workerOutputBufferMap.remove(address);
-		} finally {
-			workerOutputBufferMapLock.writeLock().unlock();
-		}
-	}
-
-	// remove buffer e todas as infos do worker
-	public void removeWorker(InetAddress address) {
-		removeWorkerOutputBuffer(address);
-		try {
-			workerInfoMapLock.writeLock().lock();
-
-			workerInfoMap.remove(address);
-		} finally {
-			workerInfoMapLock.writeLock().unlock();
+			workerInfoLock.writeLock().unlock();
 		}
 	}
 
 	// push message into global input buffer for workers
-	public void pushInputBufferWorker(ClientMessage<StCMsg> message) {
+	// 'releases' memory in the worker
+	public void pushInputBufferWorker(ClientMessage<StCMsg> message, WorkerData data) {
 		try {
+			data.memoryLock.writeLock().lock();
+			data.memory -= message.getMemory();
+			data.memoryLock.writeLock().unlock();
 			inputBufferWorker.push(message);
-		} catch (Exception e) {
+		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 	}

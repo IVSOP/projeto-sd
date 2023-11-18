@@ -11,13 +11,14 @@ import java.net.Socket;
 public class HandleWorkerInput implements Runnable {
 	private Socket socket;
 	private Server server;
-
-	private InetAddress address;
+	private WorkerData data;
+	private Thread outThread;
 
 	public HandleWorkerInput(Socket socket, Server server) {
 		this.socket = socket;
 		this.server = server;
-		this.address = socket.getInetAddress();
+		this.data = null;
+		this.outThread = null;
 	}
 
 	@Override
@@ -26,12 +27,40 @@ public class HandleWorkerInput implements Runnable {
 			DataInputStream in = new DataInputStream(socket.getInputStream());
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-			BoundedBuffer<ClientMessage<StWMsg>> outputBuffer = new BoundedBuffer<>(Server.localOutputBufferWorkerSize);
+			/////////////////////////////////// WORKER FIRST MESSAGE
+			// sends total available memory
 
-			server.putWorkerOutputBuffer(address, outputBuffer);
+			server.registerWorker(memory);
 
-			Thread outThread = new Thread(new HandleWorkerOutput(out, outputBuffer));
+			outThread = new Thread(new HandleWorkerOutput(out, this.data.outputBuffer));
 			outThread.start();
+
+
+
+
+			/////////////////////////////////// WORKER INFINITE LOOP
+			//.....
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 			try {
 				// ler da socket e meter no input buffer do servidor, usar pushInputBufferWorker
@@ -41,11 +70,15 @@ public class HandleWorkerInput implements Runnable {
 					server.pushInputBufferWorker(msg);
 				}
 			} catch (EOFException e) { // chamada quando socket fecha do outro lado e temos erro a dar read
+				// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! por agora nao ha controlo sobre isto, se worker morrer vai haver muita coisa a correr mal
 				in.close();
 				out.close();
 				socket.close();
 
-				server.removeWorker(this.address);
+				// kill output thread
+				outThread.interrupt();
+
+				// server.removeWorker(...);
 			}
 
 		} catch (IOException e) {

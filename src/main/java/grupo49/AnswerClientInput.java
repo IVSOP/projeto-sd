@@ -29,7 +29,8 @@ public class AnswerClientInput implements Runnable {
 
     private Socket socket;
 	private Server server;
-	ClientData data;
+	private ClientData data;
+	private Thread outThread;
 
 	// nao gosto nada de passar o server mas e a unica forma de nao ficar completamente ilegivel,
 	// visto que quero criar e destruir aqui o buffer
@@ -37,6 +38,7 @@ public class AnswerClientInput implements Runnable {
         this.socket = socket;
 		this.server = server;
 		this.data = null;
+		this.outThread = null;
     }
 
     @Override
@@ -44,9 +46,50 @@ public class AnswerClientInput implements Runnable {
 		try {
 			DataInputStream in = new DataInputStream(socket.getInputStream());
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-			int clientID = -1; // -1 para o java ficar contente, vou assumir que e impossivel chegar a exception sem ter mudado de valor
 	
 			try {
+
+				/////////////////////////////////////////////// CLIENT FIRST MESSAGE
+				// get login or register info
+
+				if (login) {
+					this.data = server.loginClient(name, password);
+					if (this.data == null) {
+						// client does not exist or passwords dont match
+					}
+				} else if (register) {
+					this.data = server.registerClient(name, password);
+				}
+
+
+				outThread = new Thread(new AnswerClientOutput(out, data.outputBuffer)); // thread writing to the socket
+				outThread.start();
+
+				/////////////////////////////////////////////// CLIENT INFINITE LOOP
+				// ............
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 				byte opcode;
 				CtSAutMsg authMsg = null; // message received from client
 
@@ -59,8 +102,6 @@ public class AnswerClientInput implements Runnable {
 				// login client, get his ID or return error if wrong password
 				// ...???
 	
-				Thread outThread = new Thread(new AnswerClientOutput(out, data.outputBuffer)); // thread writing to the socket
-				outThread.start();
 	
 				CtSMsg baseMsg = null;
 				ClientMessage<CtSMsg> msgToPush = new ClientMessage<>(); // message received from client with clientID
@@ -89,6 +130,9 @@ public class AnswerClientInput implements Runnable {
 				in.close();
 				out.close();
 				socket.close();
+
+				// kill output thread
+				outThread.interrupt();
 
 				data.removeOutputBuffer();
 			}
