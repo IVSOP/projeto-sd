@@ -3,6 +3,7 @@ package grupo49;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.util.concurrent.TimeUnit;
 
@@ -33,6 +34,21 @@ public class Client
 
 		try {
 			this.socket = new Socket(serverAddress, Server.PortToClient);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public Client(String serverAddress, String localAddress, String name, String password) {
+		this.inputBuffer = new BoundedBuffer<StCMsg>(inputBufferSize);
+		this.outputBuffer = new BoundedBuffer<CtSMsg>(outputBufferSize);
+
+		this.requestID = 0;
+		this.name = name;
+		this.password = password;
+
+		try {													// por alguma razao local nao pode ser string mas destino pode
+			this.socket = new Socket(serverAddress, Server.PortToClient, InetAddress.getByName(localAddress), Server.PortToClient); // local port does not matter
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -77,6 +93,8 @@ public class Client
 		socket.close();
 	}
 
+	// main receives server IP and local IP. in the future add info to automate sending work?
+	// NOT IMPLEMENTED
 	public static void main( String[] args )
     {
         System.out.println( "Hello World client!" );

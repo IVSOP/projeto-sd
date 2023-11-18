@@ -3,6 +3,7 @@ package grupo49;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.Socket;
 
 public class Worker 
@@ -12,15 +13,29 @@ public class Worker
 	public static final int threadPoolSize = 4;
 
 	private Socket socket; // socket to server
-	BoundedBuffer<ClientMessage<StWMsg>> inputBuffer;
-	BoundedBuffer<ClientMessage<StCMsg>> outputBuffer;
+	private BoundedBuffer<ClientMessage<StWMsg>> inputBuffer;
+	private BoundedBuffer<ClientMessage<StCMsg>> outputBuffer;
+	private int memory;
 
-	public Worker(String serverAddress) {
+	public Worker(String serverAddress, int memory) {
 		this.inputBuffer = new BoundedBuffer<ClientMessage<StWMsg>>(inputBufferSize);
 		this.outputBuffer = new BoundedBuffer<ClientMessage<StCMsg>>(outputBufferSize);
+		this.memory = 0;
 
 		try {
 			this.socket = new Socket(serverAddress, Server.PortToWorker);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public Worker(String serverAddress, String localAddress, int memory) {
+		this.inputBuffer = new BoundedBuffer<ClientMessage<StWMsg>>(inputBufferSize);
+		this.outputBuffer = new BoundedBuffer<ClientMessage<StCMsg>>(outputBufferSize);
+		this.memory = 0;
+		
+		try {													// por alguma razao local nao pode ser string mas destino pode
+			this.socket = new Socket(serverAddress, Server.PortToWorker, InetAddress.getByName(localAddress), Server.PortToWorker); // local port does not matter
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -56,6 +71,8 @@ public class Worker
 		}
 	}
 
+	// main receives server IP and local IP. memory is optional
+	// NOT IMPLEMENTED
     public static void main( String[] args )
     {
         System.out.println( "Hello World worker!" );
