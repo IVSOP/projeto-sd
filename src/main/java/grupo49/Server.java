@@ -121,8 +121,12 @@ public class Server
 
 			clientMapLock.readLock().unlock();
 			ClientData data = clientMap.get(clientID);
-			data.createOutputBuffer(); // !!!!!!!!!!!!!!!!!
-			return data;
+			if (data.password == password) {
+				data.createOutputBuffer(); // !!!!!!!!!!!!!!!!!
+				return data;
+			} else {
+				return null;
+			}
 		} finally {
 			clientMapLock.readLock().unlock();
 		}
