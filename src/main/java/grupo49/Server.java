@@ -151,10 +151,10 @@ public class Server
 
 			inputBufferClient.push(message);
 			clientInfo.n_currentJobs ++;
-		} catch (Exception e) {
+		} catch (InterruptedException e) {
 			e.printStackTrace();
 		} finally {
-			clientInfo.serverPushLock.lock();
+			clientInfo.serverPushLock.unlock();
 		}
 	}
 
@@ -164,16 +164,23 @@ public class Server
 		int clientID = -1; // FALTA ISTO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		ClientData clientInfo = getClient(clientID); // NAO USEI TWO PHASE LOCKING PORQUE CLIENTES NUNCA SAO REMOVIDOS
 		try {
+			// order of operations is important
+			// this way, job counts as finished once it enters output buffer
+			// if buffer is full, this will block, and not release the lock
+			// if lock is not released, new jobs can't be added anyway,
+			// effectively limiting a client in 2 ways:
+			//		job limit
+			// 		output buffer limit
+			// this way if client simply refuses to read from socket etc
+			// it cannot use many requests
 			clientInfo.serverPushLock.lock(); // precisamos da lock para alterar a variavel n_currentJobs
-
-			clientInfo.n_currentJobs --;
-			clientInfo.permissionToPush.signal(); // acordar 1 thread que esteja a esperar
-
-			clientInfo.serverPushLock.unlock(); // deixar isto num finally ???????
-
 			clientInfo.outputBuffer.push(message);
+			clientInfo.n_currentJobs --;
+			clientInfo.permissionToPush.signal(); // acordar 1 thread que esteja a esperar			
 		} catch (InterruptedException e) {
 			e.printStackTrace();
+		} finally {
+			clientInfo.serverPushLock.unlock(); // deixar isto num finally ???????
 		}
 	}
 
