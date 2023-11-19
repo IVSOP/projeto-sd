@@ -48,8 +48,11 @@ public class Server
 		this.clientNameToIDMapLock = new ReentrantReadWriteLock();
 
 
-		this.workerInfo = new ArrayList<>();
-		this.workerInfoLock = new ReentrantReadWriteLock();
+		this.threadWorkerInfo = new ThreadWorkerInfo[Server.SchedulerThreadPoolSize];
+		for (int i = 0; i < threadWorkerInfo.length; i++) { // isto e preciso???? ou o construtor vazio ja e chamado
+			threadWorkerInfo[i] = new ThreadWorkerInfo();
+		}
+		this.workerIDLock = new ReentrantReadWriteLock();
 		this.inputBufferWorker = new BoundedBuffer<>(Server.inputBufferWorkerSize);
 		this.workerID_counter = 0;
 
@@ -119,7 +122,7 @@ public class Server
 			int clientID = clientNameToIDMap.get(name);
 			clientNameToIDMapLock.readLock().unlock();
 
-			clientMapLock.readLock().unlock();
+			clientMapLock.readLock().lock();
 			ClientData data = clientMap.get(clientID);
 			if (data != null && data.password == password) {
 				data.createOutputBuffer(); // !!!!!!!!!!!!!!!!!
@@ -189,45 +192,41 @@ public class Server
 	public static final int PortToWorker = 12346;
 	public static final int inputBufferWorkerSize = 100;
 	public static final int localOutputBufferWorkerSize = 10; // local porque ha 1 por worker
+	public static final int SchedulerThreadPoolSize = 10; // threads que mandam coisas para workers
 
 	private ServerSocket socketToWorkers;
 	private BoundedBuffer<ClientMessage<StCMsg>> inputBufferWorker; // buffer onde workers colocam resultados de queries
-	private ArrayList<WorkerData> workerInfo; // worker ID -> worker info. ArrayList para ser facil de iterar
-	private ReentrantReadWriteLock workerInfoLock;
+	private ThreadWorkerInfo[] threadWorkerInfo; // thread ID -> information about workers for that thread, and a lock associated with it.
+	// NOTA: threadWorkerInfo nao tem nenhuma lock pois a threadPool tem tamanho estatico e nada disto vai ser alterado
+	// mudei de list para [] para ser mais claro como nunca vai mudar,
+	// facil de mudar para dinamico no futuro se for preciso, e a lock podia simplesmente ser a de baixo
 	private int workerID_counter;
+	private ReentrantReadWriteLock workerIDLock; // usar lock normal?, nunca se faz so um read
 
-
-	// // returns a worker's ouput buffer, you can use it freely
-	// public BoundedBuffer<ClientMessage<StWMsg>> getWorkerOutputBuffer(InetAddress address) {
-	// 	try {
-	// 		workerOutputBufferMapLock.readLock().lock();
-
-	// 		return workerOutputBufferMap.get(address);
-	// 	} finally {
-	// 		workerOutputBufferMapLock.readLock().unlock();
-	// 	}
-	// }
-
-	// no error checking
+	// assigns a worker to its designated thread on the pool, based on its ID
 	public WorkerData registerWorker(int memory) {
 		try {
-			workerInfoLock.writeLock().lock();
+			// workerInfoLock.writeLock().lock();
+			workerIDLock.writeLock().lock();
 			WorkerData data = new WorkerData(this.workerID_counter, memory);
-			this.workerInfo.add(workerID_counter, data); // manually add at this index
+			int threadID = workerID_counter % threadWorkerInfo.length;
+			this.threadWorkerInfo[threadID].addWorker(data);
 			this.workerID_counter ++;
 			return data;
 		} finally {
-			workerInfoLock.writeLock().unlock();
+			// workerInfoLock.writeLock().unlock();
+			// acho que unlock podia ficar noutro sitio antes, mas assim fica seguro
+			workerIDLock.writeLock().unlock();
 		}
 	}
 
 	// push message into global input buffer for workers
-	// 'releases' memory in the worker
+	// idk why a worker's memory and job count is changed here and not as soon as memory is received, I forgor
 	public void pushInputBufferWorker(ClientMessage<StCMsg> message, WorkerData data) {
 		try {
-			data.memoryLock.writeLock().lock();
-			data.memory -= message.getMemory();
-			data.memoryLock.writeLock().unlock();
+			data.workerLock.writeLock().lock();
+			data.changeMemoryAndJobs(- message.getMemory(), - 1);
+			data.workerLock.writeLock().unlock(); // unlocked here since no other changes will be made and the push itself will block
 			inputBufferWorker.push(message);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
@@ -289,6 +288,14 @@ public class Server
 	public void mainLoop() {
 		Thread clientLoopThread = new Thread(new ClientLoop(socketToClients, this));
 		clientLoopThread.start();
+
+
+		// criar threadpool de distribuir trabalho para workers
+		Thread schedulerThread;
+		for (int i = 0; i < threadWorkerInfo.length; i++) {
+			schedulerThread = new Thread(new SchedulerThreadRunnable(threadWorkerInfo[i], this.inputBufferWorker));
+			schedulerThread.start();
+		}
 
 		// vou correr workers aqui em vez de numa thread, assim servidor bloqueia em vez de ficar no background
 		WorkerLoop workerloop = new WorkerLoop(socketToWorkers, this);
