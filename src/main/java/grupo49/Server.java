@@ -23,19 +23,30 @@ public class Server
 	public static final int PortToClient = 12345;
 	public static final int inputBufferClientSize = 100;
 	public static final int localOutputBufferClientSize = 10; // local porque ha 1 por cliente
+	public static final int ClientDispatcherThreads = 5;
 	
 	private ServerSocket socketToClients;
 	private BoundedBuffer<ClientMessage<CtSMsg>> inputBufferClient; // client requests are all written to this buffer
 	
-	private int clientID_counter; // counter to assign new client ID. does not have lock since the lock for clientMap is used
-	private Map<Integer, ClientData> clientMap; // ID -> dados
 	private ReentrantReadWriteLock clientMapLock;
-	private Map<String, Integer> clientNameToIDMap;
+		private Map<Integer, ClientData> clientMap; // ID -> dados
+		private int clientID_counter; // counter to assign new client ID. does not have lock since the lock for clientMap is used
 	private ReentrantReadWriteLock clientNameToIDMapLock;
+		private Map<String, Integer> clientNameToIDMap;
 	// private Map<Integer, BoundedBuffer<StCMsg>> clientOutputBufferMap; // buffers de output para os clientes (passou para o ClientData em si)
 	// private ReentrantReadWriteLock clientOutputBufferMapLock;
 
-	private int MaxJobsPerClient;
+	public class OcupationData {
+		int memory_remaining;
+		int current_jobs;
+
+		public OcupationData(int memory_remaining, int current_jobs) {
+			this.memory_remaining = memory_remaining;
+			this.current_jobs = current_jobs;
+		}
+	}
+
+	private final int MaxJobsPerClient = 5;
 
 	public Server() {
 		this.clientID_counter = 0;
@@ -55,8 +66,6 @@ public class Server
 		this.workerIDLock = new ReentrantReadWriteLock();
 		this.inputBufferWorker = new BoundedBuffer<>(Server.inputBufferWorkerSize);
 		this.workerID_counter = 0;
-
-		this.MaxJobsPerClient = 5;
 
 		try {
 			this.socketToClients = new ServerSocket(Server.PortToClient);
@@ -200,16 +209,16 @@ public class Server
 	// NOTA: threadWorkerInfo nao tem nenhuma lock pois a threadPool tem tamanho estatico e nada disto vai ser alterado
 	// mudei de list para [] para ser mais claro como nunca vai mudar,
 	// facil de mudar para dinamico no futuro se for preciso, e a lock podia simplesmente ser a de baixo
-	private int workerID_counter;
 	private ReentrantReadWriteLock workerIDLock; // usar lock normal?, nunca se faz so um read
+		private int workerID_counter;
 
 	// assigns a worker to its designated thread on the pool, based on its ID
 	public WorkerData registerWorker(int memory) {
 		try {
 			// workerInfoLock.writeLock().lock();
 			workerIDLock.writeLock().lock();
-			WorkerData data = new WorkerData(this.workerID_counter, memory);
 			int threadID = workerID_counter % threadWorkerInfo.length;
+			WorkerData data = new WorkerData(this.workerID_counter, memory, threadWorkerInfo[threadID]);
 			this.threadWorkerInfo[threadID].addWorker(data);
 			this.workerID_counter ++;
 			return data;
@@ -222,15 +231,31 @@ public class Server
 
 	// push message into global input buffer for workers
 	// idk why a worker's memory and job count is changed here and not as soon as memory is received, I forgor
+	// will also change the values on the thread that controls this worker
 	public void pushInputBufferWorker(ClientMessage<StCMsg> message, WorkerData data) {
 		try {
 			data.workerLock.writeLock().lock();
 			data.changeMemoryAndJobs(- message.getMemory(), - 1);
+
+			// ja que mudamos no worker individual, aproveita-se tbm para mudar o acumulador nas threads
+			// nao sei se faz diferenca ser aqui ou fazer um unlock depois, nao pensei muito bem nisto mas vai dar ao mesmo acho eu
+			data.ownerThread.addMemoryAndJobs(new OcupationData(- message.getMemory(), -1));
+			
 			data.workerLock.writeLock().unlock(); // unlocked here since no other changes will be made and the push itself will block
 			inputBufferWorker.push(message);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public OcupationData getOcupationData() {
+		OcupationData data = new OcupationData(0, 0);
+
+		for (ThreadWorkerInfo thread : threadWorkerInfo) {
+			thread.readMemoryAndJobs(data);
+		}
+
+		return data;
 	}
 
 	/////////////////////////////////////// MAINS ///////////////////////////////////////
@@ -275,7 +300,7 @@ public class Server
 					Socket socket = socketToWorkers.accept();
 					
 					// pelos nomes nao se percebe muito bem, depois mudar
-					// mas a de input vai criar a de output assim que o buffer estiver pronto (ela vai cria lo)
+					// mas a de input vai criar a de output
 					Thread workerThread = new Thread(new HandleWorkerInput(socket, server));
 					workerThread.start();
 				}
@@ -289,12 +314,17 @@ public class Server
 		Thread clientLoopThread = new Thread(new ClientLoop(socketToClients, this));
 		clientLoopThread.start();
 
-
 		// criar threadpool de distribuir trabalho para workers
 		Thread schedulerThread;
 		for (int i = 0; i < threadWorkerInfo.length; i++) {
 			schedulerThread = new Thread(new SchedulerThreadRunnable(threadWorkerInfo[i], this.inputBufferWorker));
 			schedulerThread.start();
+		}
+
+		Thread clientDispatcherThread;
+		for (int i = 0; i < ClientDispatcherThreads; i++) {
+			clientDispatcherThread = new Thread(new ClientDispatcherThread(this, this.inputBufferWorker));
+			clientDispatcherThread.start();
 		}
 
 		// vou correr workers aqui em vez de numa thread, assim servidor bloqueia em vez de ficar no background

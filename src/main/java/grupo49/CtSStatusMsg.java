@@ -3,7 +3,6 @@ package grupo49;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 
 ////Client to server status request message
 public class CtSStatusMsg implements CtSMsg {

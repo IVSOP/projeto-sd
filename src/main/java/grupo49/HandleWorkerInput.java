@@ -30,7 +30,7 @@ public class HandleWorkerInput implements Runnable {
 			/////////////////////////////////// WORKER FIRST MESSAGE
 			// sends total available memory
 
-			server.registerWorker(memory);
+			this.data = server.registerWorker(memory);
 
 			outThread = new Thread(new HandleWorkerOutput(out, this.data.outputBuffer));
 			outThread.start();
@@ -67,7 +67,7 @@ public class HandleWorkerInput implements Runnable {
 				while(true) {
 					ClientMessage<StCMsg> msg = new ClientMessage<>();
 					msg.deserialize(in);
-					server.pushInputBufferWorker(msg);
+					server.pushInputBufferWorker(msg, this.data);
 				}
 			} catch (EOFException e) { // chamada quando socket fecha do outro lado e temos erro a dar read
 				// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! por agora nao ha controlo sobre isto, se worker morrer vai haver muita coisa a correr mal

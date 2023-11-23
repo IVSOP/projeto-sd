@@ -1,0 +1,54 @@
+Client:
+	O cliente em si
+	ClientOutputRunnable:
+		Trata do output do cliente, enviando coisas do buffer de output para a socket
+	ClientInputRunnable:
+		Trata do input do cliente, lendo coisas da socket para o buffer de input
+
+Worker:
+	O worker em si
+	WorkerOutputRunnable:
+		Trata do output do worker, lendo coisas do buffer de output para a socket
+	(input nao existe por qualquer motivo, ficou no mainLoop):
+		Trata do input to worker, lendo coisas da socket para o buffer de input
+	WorkerWorkRunnable:
+		Faz os jobs em si. Quando termina, coloca as respostas destes no buffer de output
+
+Server:
+	O servidor em si
+	ClientData:
+		Contem todas as informacoes sobre um cliente. Tem, tambem, o seu buffer de output, bem como locks e conditions associadas com limitar o seu numero maximo de jobs
+		Este buffer de output e 'eliminado' quando o cliente se desconecta, para poupar memoria
+	OcupationData:
+		Pequena classe que contem memoria e jobs todais de uma thread de scheduler
+	ThreadWorkerInfo:
+		Informacoes que uma thread de scheduler tem para poder gerir os seus workers. Contem os proprios workers e numero de memoria e jobs totais deles
+	ClientLoop:
+		Permite receber conexoes de novos clientes
+	AnswerClientInput:
+		Recebe mensagens de um cliente e coloca-as no buffer de input do servidor. Faz tambem todo o registo do cliente, e cria a thread da classe abaixo
+		Nota: ao colocar no buffer de input as informacoes sobre o cliente sao atualizadas
+	AnswerClientOutput:
+		Le mensagens do buffer de output de um cliente e envia para a sua socket.
+	WorkerLoop:
+		Permite receber conexoes de novos clientes
+	HandleWorkerInput:
+		Regista o worker, le as suas mensagens e coloca no buffer de input para workers do servidor
+		Cria a thread da classe abaixo
+		Nota: ao colocar no buffer de input, os dados do worker e da thread que o gere sao atualizados
+	HandleWorkerOutput:
+		Le mensagens do buffer de output de um worker e envia pela sua socket
+	SchedulerThreadRunnable:
+		Gere varios workers, tirando mensagens do buffer de input para clientes e fazendo assign a um dos seus workers, com base no numero de jobs e memoria que este tem
+	ClientDispatcherThread:
+		Le mensagens do buffer de input dos workers e envia ao respetivo cliente (cada thread pode enviar a qualquer cliente)
+	WorkerData:
+		Contem todos os dados de um worker. Inclui tambem o seu buffer de out-ut, de modo semelhante ao ClientData
+
+
+
+
+
+
+
+tomar nota de quando qualquer minima coisinha e alterada

@@ -9,13 +9,15 @@ public class WorkerData {
 	public ReentrantReadWriteLock workerLock; // para evitar conflitos, porque varias threads mexem na memory e nos jobs
 		public int memory;
 		public int jobs; // jobs que ele esta a fazer atualmente
+	public ThreadWorkerInfo ownerThread; // util para query de ocupacao, eu sei que e feio e redundante
 
-	public WorkerData(int ID, int memory) {
+	public WorkerData(int ID, int memory, ThreadWorkerInfo ownerThread) {
 		this.ID = ID;
 		this.outputBuffer = new BoundedBuffer<>(Server.localOutputBufferWorkerSize);
 		this.workerLock = new ReentrantReadWriteLock();
 		this.memory = memory;
 		this.jobs = 0;
+		this.ownerThread = ownerThread;
 	}
 
 	// ja que a lock e a mesma, fazer tudo de uma vez
@@ -28,5 +30,6 @@ public class WorkerData {
 		} finally {
 			workerLock.writeLock().unlock();
 		}
+		cuidado com onde esta func e chamada, tem de mudar coisas na thread que controla tbm, ver isso melhor!!!!!!!!!!!
 	}
 }

@@ -13,6 +13,8 @@ public class WorkerWorkRunnable implements Runnable {
 	public void run() {
 		try {
 			while (true) {
+
+				o que e que se esta a passar aqui? esta thread devia simplemente fazer trabalho e enviar a resposta, porque e que no fim tamos a usar um StCMsg????
 				ClientMessage<StWMsg> inputMsg = inputBuffer.pop();
 
 				// não há mais mensagens StW por isso não é preciso switch com opcode, para já pelo menos

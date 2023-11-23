@@ -16,12 +16,12 @@ public class ClientData {
 
 		// lock e condition para termos permissao para dar push no input buffer do servidor
 		public ReentrantLock serverPushLock;
-		public Condition permissionToPush;
-		public int n_currentJobs; // numero de jobs que o cliente tem:
-		// assim que entram para input buffer para SV, ++
-		// quando entram para output buffer para Cliente, --
-		// NOTA IMPORTANTE: n_currentJobs nao precisa de locks para ler, pois pequenos desvios sao aceitaveis
-		// para escrever, usar a serverPushLock
+			public Condition permissionToPush;
+			public int n_currentJobs; // numero de jobs que o cliente tem:
+			// assim que entram para input buffer para SV, ++
+			// quando entram para output buffer para Cliente, --
+			// NOTA IMPORTANTE: n_currentJobs nao precisa de locks para ler, pois pequenos desvios sao aceitaveis
+			// para escrever, usar a serverPushLock
 
 		public BoundedBuffer<StCMsg> outputBuffer;
 

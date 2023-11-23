@@ -2,26 +2,63 @@ package grupo49;
 
 import java.util.ArrayList;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class ThreadWorkerInfo {
-	public ArrayList<WorkerData> arr;
 	public ReentrantLock lock; // threads do scheduler e threads de assignment mexem nisto, precisa de lock
+		public ArrayList<WorkerData> arr;
 	// nao e readwrite porque nunca se usa para reads
 	// usada para:
-	//		sort da lista
-	// 		adicionar novos elementos
+	//		sort da lista (muda ordem)
+	// 		adicionar novos elementos (pode mudar onde os dados estao?)
+
+	// para a query de ocupacao de servico ser mais rapida
+	// comentarios so sobre memoria:
+	// decrementado por esta thread ao dar assign para um worker
+	// incrementado por esta thread ao adicionar um novo worker
+	// incrementado por uma outra thread quando se recebe resultado vindo do worker
+	private ReentrantReadWriteLock memoryAndJobsLock;
+		int totalMemoryRemaining;
+		int totalPendingJobs;
 
 	public ThreadWorkerInfo() {
 		this.arr = new ArrayList<>();
 		this.lock = new ReentrantLock();
+		this.totalMemoryRemaining = 0;
+		this.memoryAndJobsLock = new ReentrantReadWriteLock();
 	}
 
 	public void addWorker(WorkerData data) {
 		try {
 			lock.lock();
+			memoryAndJobsLock.readLock().lock();
 			arr.add(data);
+			totalMemoryRemaining += data.memory;
 		} finally {
+			memoryAndJobsLock.readLock().unlock();
 			lock.unlock();
+		}
+	}
+
+	// adds to this
+	public void addMemoryAndJobs(Server.OcupationData data) {
+		try {
+			memoryAndJobsLock.writeLock().lock();
+			this.totalPendingJobs += data.current_jobs;
+			this.totalMemoryRemaining += data.memory_remaining;
+		} finally {
+			memoryAndJobsLock.writeLock().unlock();
+		}
+	}
+
+	// adds to the received data
+	public void readMemoryAndJobs(Server.OcupationData data) {
+		try {
+			memoryAndJobsLock.readLock().lock();
+			data.current_jobs += this.totalPendingJobs;
+			data.memory_remaining += this.totalMemoryRemaining;
+		} finally {
+			memoryAndJobsLock.readLock().unlock();
 		}
 	}
 
@@ -56,10 +93,21 @@ public class ThreadWorkerInfo {
 				// nao usamos locks de read porque podemos ter de alterar o valor, a performance nao deve ser muito diferente, ia ser confuso usar read e write logo a seguir, nem sei como funcemina
 				try {
 					data.workerLock.writeLock().lock();
-					// nao usei changeMemoryAndJobs(), aproveito ja o facto de ter a lock feita (muito confuso mas prontos)
+					// nao usei changeMemoryAndJobs(), assim aproveito ja o facto de ter a lock feita (muito confuso mas prontos)
+
 					if (data.memory >= memory) { // >= ou so >??
+						// worker has been chosen
 						data.memory -= memory;
 						data.jobs ++;
+
+							// isto podia ser feito em qualquer sitio acho eu, ficou aqui
+							try {
+								memoryAndJobsLock.writeLock().lock();
+								totalMemoryRemaining -= memory;
+								totalPendingJobs ++;
+							} finally {
+								memoryAndJobsLock.writeLock().unlock();
+							}
 						
 						// NOTA: este push em teoria pode bloquear e, assim, mete todos os outros workers desta thread em espera
 						// mas como este e um dos melhores workers e incrementamos aqui o jobs, significa que em qualquer outro woker seria necessario esperar
