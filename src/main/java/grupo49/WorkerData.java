@@ -21,15 +21,14 @@ public class WorkerData {
 	}
 
 	// ja que a lock e a mesma, fazer tudo de uma vez
-	// nao passamos valor novo, passamos uma diferenca
-	public void changeMemoryAndJobs(int memoryDelta, int jobsDelta) {
-		try {
-			workerLock.writeLock().lock();
-			this.memory += memoryDelta;
-			this.jobs += jobsDelta;
-		} finally {
-			workerLock.writeLock().unlock();
-		}
-		cuidado com onde esta func e chamada, tem de mudar coisas na thread que controla tbm, ver isso melhor!!!!!!!!!!!
-	}
+	// acabou por nunca ser usada, ver Server::pushInputBufferWorker
+	// public void addMemoryAndJobs(int memoryDelta, int jobsDelta) {
+	// 	try {
+	// 		workerLock.writeLock().lock();
+	// 		this.memory += memoryDelta;
+	// 		this.jobs += jobsDelta;
+	// 	} finally {
+	// 		workerLock.writeLock().unlock();
+	// 	}
+	// }
 }

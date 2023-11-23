@@ -5,7 +5,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class ThreadWorkerInfo {
-	public ReentrantLock lock; // threads do scheduler e threads de assignment mexem nisto, precisa de lock
+	public ReentrantLock arrayLock; // threads do scheduler e threads de assignment mexem nisto, precisa de lock
 		public ArrayList<WorkerData> arr;
 	// nao e readwrite porque nunca se usa para reads
 	// usada para:
@@ -13,30 +13,26 @@ public class ThreadWorkerInfo {
 	// 		adicionar novos elementos (pode mudar onde os dados estao?)
 
 	// para a query de ocupacao de servico ser mais rapida
-	// comentarios so sobre memoria:
-	// decrementado por esta thread ao dar assign para um worker
-	// incrementado por esta thread ao adicionar um novo worker
-	// incrementado por uma outra thread quando se recebe resultado vindo do worker
 	private ReentrantReadWriteLock memoryAndJobsLock;
-		int totalMemoryRemaining;
+		int totalMemoryRemaining; 
 		int totalPendingJobs;
 
 	public ThreadWorkerInfo() {
 		this.arr = new ArrayList<>();
-		this.lock = new ReentrantLock();
+		this.arrayLock = new ReentrantLock();
 		this.totalMemoryRemaining = 0;
 		this.memoryAndJobsLock = new ReentrantReadWriteLock();
 	}
 
 	public void addWorker(WorkerData data) {
 		try {
-			lock.lock();
-			memoryAndJobsLock.readLock().lock();
+			arrayLock.lock();
+			memoryAndJobsLock.writeLock().lock();
 			arr.add(data);
 			totalMemoryRemaining += data.memory;
 		} finally {
-			memoryAndJobsLock.readLock().unlock();
-			lock.unlock();
+			memoryAndJobsLock.writeLock().unlock();
+			arrayLock.unlock();
 		}
 	}
 
@@ -52,6 +48,7 @@ public class ThreadWorkerInfo {
 	}
 
 	// adds to the received data
+	// o nome disto e mesmo muito mau mas ao menos nao fica parecido com a de cima
 	public void readMemoryAndJobs(Server.OcupationData data) {
 		try {
 			memoryAndJobsLock.readLock().lock();
@@ -86,7 +83,7 @@ public class ThreadWorkerInfo {
 	// ler explicacao acima para falta de locks
 	public void dispatchToBestWorker(ClientMessage<StWMsg> outputMessage, int memory) {
 		try {
-			lock.lock();
+			arrayLock.lock();
 			this.arr.sort((a, b) -> a.jobs - b.jobs);
 			for (WorkerData data : arr) {
 				// agora ja usamos locks individuais, temos de ter a certeza da memoria disponivel
@@ -122,7 +119,7 @@ public class ThreadWorkerInfo {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		} finally {
-			lock.unlock();
+			arrayLock.unlock();
 		}
 	}
 }

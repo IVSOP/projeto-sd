@@ -1,3 +1,5 @@
+--------Classes--------
+
 Client:
 	O cliente em si
 	ClientOutputRunnable:
@@ -20,7 +22,7 @@ Server:
 		Contem todas as informacoes sobre um cliente. Tem, tambem, o seu buffer de output, bem como locks e conditions associadas com limitar o seu numero maximo de jobs
 		Este buffer de output e 'eliminado' quando o cliente se desconecta, para poupar memoria
 	OcupationData:
-		Pequena classe que contem memoria e jobs todais de uma thread de scheduler
+		Pequena classe que contem memoria e jobs totais de uma thread de scheduler
 	ThreadWorkerInfo:
 		Informacoes que uma thread de scheduler tem para poder gerir os seus workers. Contem os proprios workers e numero de memoria e jobs totais deles
 	ClientLoop:
@@ -43,12 +45,83 @@ Server:
 	ClientDispatcherThread:
 		Le mensagens do buffer de input dos workers e envia ao respetivo cliente (cada thread pode enviar a qualquer cliente)
 	WorkerData:
-		Contem todos os dados de um worker. Inclui tambem o seu buffer de out-ut, de modo semelhante ao ClientData
+		Contem todos os dados de um worker. Inclui tambem o seu buffer de output, de modo semelhante ao ClientData
+
+
+--------Explicacao de locks e conditions--------
+
+BoundedBuffer:
+	locks e conditions para que push() espere caso esteja cheio e pop() espere caso esteja vazio
+
+ClientData:
+	serverPushLock e permissionToPush (condition) referentes ao numero de jobs.
+	para ler (e opcionalmente escrever) no numero de jobs, a lock deve ser usada
+	a condition usa-se para dar push para o input buffer, no servidor: se o cliente tiver demasiados jobs ativos, espera nessa condition
+		wait: quando ha demasiados jobs
+		wake up: quando numero de jobs e decrementado (ao dar push para um cliente)
+
+	- Server::pushInputBufferClient usa condition para wait e incrementa jobs depois de meter no inputBuffer de clientes
+	- Server::pushClientOutput acorda condition quando job vai para output buffer de cliente, decrementa numero de jobs
+
+Server:
+	clientMapLock:
+		Lock para escrever ou ler no clientMap
+		Aproveitada tambem para escrever em clientID_counter
+
+	clientNameToIDMapLock:
+		Lock para escrever ou ler no clientNameToIDMap
+
+	workerIDLock:
+		Lock para escrever ou ler no workerID_counter
+
+ThreadWorkerInfo:
+	arrayLock:
+		Lock para aceder ao array de workers
+
+	memoryAndJobsLock:
+		para escrever ou ler no total de jobs e memoria dos workers que a thread gere
+
+		- ThreadWorkerInfo::addWorker usa-a para incrementar memoria disponivel
+
+		- ThreadWorkerInfo::addMemoryAndJobs usa-a para alterar memoria e jobs
+
+		- ThreadWorkerInfo::readMemoryAndJobs usa-a para alterar a de outra classe, usa so para leitura
+
+		- ThreadWorkerInfo::dispatchToBestWorker usa-a pois, depois do sort, precisamos de ter a certeza da memoria e jobs num worker. Aproveitamos ja termos a lock para, se esse worker for selecionado, alterar memoria e jobs de um worker bem como as totais, usando lock da classe abaixo
+
+WorkerData:
+	workerLock:
+		Lock para escrever ou ler no numero da memoria e jobs deste worker
+
+--------Onde e que dados sao alterados, para ter a certeza que locks sao precisas--------
+
+Server:
+	Coisas simples, sempre sobre estruturas de dados e assim
+
+ClientData:
+	n_currentJobs:
+		Server::pushInputBufferClient faz read e depois write, para incrementar -> feito por thread de input cliente
+		Server::pushClientOutput faz write, decrementa -> feito por uma thread de client dispatcher
+		threads diferentes, logo lock e necessaria
+
+ThreadWorkerInfo:
+	totalMemoryRemaining e totalPendingJobs:
+		ThreadWorkerInfo::addWorker faz writes para incrementar memoria -> chamado no registerWorker -> chamado pela thread de input do worker
+
+		ThreadWorkerInfo::addMemoryAndJobs faz writes para alterar os valores -> chamado no pushInputBufferWorker -> chamado pela thread de input do worker
+
+		ThreadWorkerInfo::readMemoryAndJobs faz reads -> getOcupationData -> chamado pela thread de input do cliente (nem chega a ir para input buffer? ainda nao fiz isto)
+
+		ThreadWorkerInfo::dispatchToBestWorker faz writes -> chamado por scheduler thread
+
+WorkerData:
+	memory e jobs:
+		Server::pushInputBufferWorker faz writes para aumentar memoria e diminuir jobs -> chamado pela thread de input do worker
+
+		ThreadWorkerInfo::dispatchToBestWorker faz writes para diminuir a memoria e aumentar jobs mal o worker seja assigned, ######antes do pedido sequer ir para o seu buffer -> chamado por sheduler thread
 
 
 
+escrever noutro txt qualquer as coisas, por ex
+jobs dum cliente so sao alterados depois de um push para cada buffer
 
-
-
-
-tomar nota de quando qualquer minima coisinha e alterada

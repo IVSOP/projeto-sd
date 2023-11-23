@@ -235,7 +235,11 @@ public class Server
 	public void pushInputBufferWorker(ClientMessage<StCMsg> message, WorkerData data) {
 		try {
 			data.workerLock.writeLock().lock();
-			data.changeMemoryAndJobs(- message.getMemory(), - 1);
+
+			// nao vou usar isto porque ja temos a lock, podemos alterar diretamente
+			// data.addMemoryAndJobs(message.getMemory(), - 1);
+			data.memory += message.getMemory();
+			data.jobs --;
 
 			// ja que mudamos no worker individual, aproveita-se tbm para mudar o acumulador nas threads
 			// nao sei se faz diferenca ser aqui ou fazer um unlock depois, nao pensei muito bem nisto mas vai dar ao mesmo acho eu
