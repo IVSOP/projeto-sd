@@ -30,6 +30,7 @@ public class ClientUI {
 				e.printStackTrace();
 			}
 		});
+		receiveThread.start();
 
 		// loop para permitir enviar pedidos
 		while (true) {
