@@ -110,7 +110,7 @@ ThreadWorkerInfo:
 
 		ThreadWorkerInfo::addMemoryAndJobs faz writes para alterar os valores -> chamado no pushInputBufferWorker -> chamado pela thread de input do worker
 
-		ThreadWorkerInfo::readMemoryAndJobs faz reads -> getOcupationData -> chamado pela thread de input do cliente (nem chega a ir para input buffer? ainda nao fiz isto)
+		ThreadWorkerInfo::readMemoryAndJobs faz reads -> getOcupationData -> chamado pela thread de input do cliente (???????????????????????????????? confirmar)
 
 		ThreadWorkerInfo::dispatchToBestWorker faz writes -> chamado por scheduler thread
 
