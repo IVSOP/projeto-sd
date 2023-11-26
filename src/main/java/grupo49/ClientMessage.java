@@ -13,7 +13,7 @@ public class ClientMessage<T extends IMessage> {
     private int clientId; // client identifier (assigned by server)
     private T message; // client message: CtSMsg, StCMsg, WtSMsg
 
-    ClientMessage() {
+    ClientMessage () {
         //fill with setters
     }
     

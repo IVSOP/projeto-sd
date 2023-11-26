@@ -13,17 +13,14 @@ public class ClientDispatcherThread implements Runnable {
 	@Override
 	public void run() {
 		ClientMessage<StCMsg> message;
-		StCMsg outMessage;
-		int clientID;
 		try {
 			while (true) {
 				message = inputBuffer.pop();
 
 				// sending information to the scheduler threads that control this worker that it has completed a job is not done here but by the input thread itself, its all the same I guess
 				// these threads are dumb, just send messages to clients
-				fazer coisas para ter uma outMessage................ ou ja ta feita??
 
-				server.pushClientOutput(outMessage); // trata de tudo
+				server.pushClientOutput(message.getClient(), message.getMessage()); // trata de tudo
 			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();

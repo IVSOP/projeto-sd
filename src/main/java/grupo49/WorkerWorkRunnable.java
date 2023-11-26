@@ -1,10 +1,12 @@
 package grupo49;
 
+import sd23.*; // n dá depois
+
 public class WorkerWorkRunnable implements Runnable {
 	BoundedBuffer<ClientMessage<StWMsg>> inputBuffer;
-	BoundedBuffer<ClientMessage<StCMsg>> outputBuffer;
+	BoundedBuffer<ClientMessage<WtSMsg>> outputBuffer;
 
-	public WorkerWorkRunnable(BoundedBuffer<ClientMessage<StWMsg>> inputBuffer, BoundedBuffer<ClientMessage<StCMsg>> outputBuffer) {
+	public WorkerWorkRunnable(BoundedBuffer<ClientMessage<StWMsg>> inputBuffer, BoundedBuffer<ClientMessage<WtSMsg>> outputBuffer) {
 		this.inputBuffer = inputBuffer;
 		this.outputBuffer = outputBuffer;
 	}
@@ -14,24 +16,30 @@ public class WorkerWorkRunnable implements Runnable {
 		try {
 			while (true) {
 
-				o que e que se esta a passar aqui? esta thread devia simplemente fazer trabalho e enviar a resposta, porque e que no fim tamos a usar um StCMsg????
 				ClientMessage<StWMsg> inputMsg = inputBuffer.pop();
 
-				// não há mais mensagens StW por isso não é preciso switch com opcode, para já pelo menos
+				// não há mais mensagens StW por isso não é preciso switch com opcode
 				StWExecMsg msg = (StWExecMsg) inputMsg.getMessage(); 
-				byte[] data = msg.getData();
-				int requestN = msg.getRequestN();
 
-				// do work with previous values
-				
-				StCMsg innerMsg = null;
-				
-				//se work result deu erro
-				// finalMsg = new StCErrorMsg(requestN, errorMsg);
-				// //se work não deu erro
-				// finalMsg = new StCExecMsg(requestN, newData);
+				WtSMsg innerMsg = null;
 
-				ClientMessage<StCMsg> finalMsg = new ClientMessage<>(inputMsg.getClient(), innerMsg);
+				// tarefa do ficheiro
+				byte[] job = msg.getData(); 
+
+				try {
+
+					// executar a tarefa
+					byte[] output = JobFunction.execute(job);
+
+					//System.err.println("success, returned "+output.length+" bytes");
+					innerMsg = new WtSExecMsg(msg.getRequestN(), msg.getMemUsed(), output); //se resultado correu bem
+
+				} catch (JobFunctionException e) { //se resultado correu mal
+					//System.err.println("job failed: code="+e.getCode()+" message="+e.getMessage());
+					innerMsg = new WtSErrorMsg(msg.getRequestN(), msg.getMemUsed(), "job failed: code="+e.getCode()+" message="+e.getMessage());
+				}
+
+				ClientMessage<WtSMsg> finalMsg = new ClientMessage<>(inputMsg.getClient(), innerMsg);
 				this.outputBuffer.push(finalMsg);
 			}
 		} catch (InterruptedException e) {

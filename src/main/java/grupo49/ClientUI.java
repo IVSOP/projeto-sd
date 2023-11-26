@@ -17,8 +17,10 @@ public class ClientUI {
 		// criar cliente
 		Client client = new Client(serverAddress, localAddress, username, password);
 
-		// falta login???????????????????????????????? ou client ja faz sozinho????????????????????????????????
-
+		// TODO: falta registar ou login
+		// client devia fazer sozinho, antes de poder fazer pedidos,
+		// mas devia dar para distinguir entre fazer register ou login e cliente devolve se login correu bem ou nao
+		
 		Thread receiveThread = new Thread(() -> {
 			StCMsg message;
 			try {
@@ -34,11 +36,16 @@ public class ClientUI {
 
 		// loop para permitir enviar pedidos
 		while (true) {
+			//TODO ########### distinguir entre exec, que segue a linha de funcoes abaixo
+
 			// pedir nome do ficheiro de input
 			// se for para dar submit e buffer de output estiver cheio, vai bloquear
 			String filePath = askForInput("Enter the file path: ");
-			CtSMsg requestMsg = readClientMessageFromFile(filePath);
-			client.sendRequest(requestMsg);
+			int memNeeded = readMemFromFile(filePath);
+			byte[] requestMsg = readInputBytesFromFile(filePath);
+			client.sendExecMsg(memNeeded,requestMsg);
+
+			// TODO ########## ou então pedido de status
 		}
 	}
 

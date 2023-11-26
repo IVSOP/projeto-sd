@@ -6,20 +6,23 @@ import java.io.IOException;
 
 
 //Client to server authentication and register message
-public class CtSAutMsg {
+public class CtSRegMsg {
+    private static final byte opcode = 0; // value to distinguish message server side
     private String name;
     private String password;
 
-    public CtSAutMsg() {
+    public CtSRegMsg() {
         // n faz nada, preencher com setters
     }
 
-    public CtSAutMsg(String name, String password) {
+    public CtSRegMsg(String name, String password) {
         this.name = name;
         this.password = password;
     }
 
     public void serialize(DataOutputStream dos) throws IOException{
+        dos.writeByte(opcode);
+        
         dos.writeUTF(this.name);
         dos.writeUTF(this.password);
         dos.flush();

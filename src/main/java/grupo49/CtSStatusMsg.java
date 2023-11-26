@@ -6,7 +6,7 @@ import java.io.IOException;
 
 ////Client to server status request message
 public class CtSStatusMsg implements CtSMsg {
-    private static final byte opcode = 1; // value to distinguish message server side
+    private static final byte opcode = 3; // value to distinguish message server side
     private int requestN; // request number (in clients pov)
 
     public CtSStatusMsg() {

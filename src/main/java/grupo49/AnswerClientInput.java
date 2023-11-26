@@ -6,6 +6,8 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.net.Socket;
 
+import grupo49.Server.OcupationData;
+
 // input
 
 	//  criar buffer
@@ -46,86 +48,85 @@ public class AnswerClientInput implements Runnable {
 		try {
 			DataInputStream in = new DataInputStream(socket.getInputStream());
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-	
 			try {
+				boolean authSuccessful = false;
+				
+				while (!authSuccessful) {
+					byte opcode = in.readByte();
+					// Authenticate client first
+					switch (opcode) {
+						case 0: //authentication
+							CtSRegMsg authMsg = new CtSRegMsg();
+							authMsg.deserialize(in);
+							this.data = server.registerClient(authMsg.getName(), authMsg.getPassword());
+							authSuccessful = true;
+							break;
 
-				/////////////////////////////////////////////// CLIENT FIRST MESSAGE
-				// get login or register info
+						case 1: //login
+							CtSLoginMsg loginMsg = new CtSLoginMsg();
+							loginMsg.deserialize(in);
+							this.data = server.loginClient(loginMsg.getName(), loginMsg.getPassword());
+							if (this.data == null) { // se login correu mal
+								StCErrorMsg error = new StCErrorMsg(-1,"Client not registered, or password doesn't match");
+								// não é necessário locks, só esta thread escreve 
+								error.serialize(out);
 
-				if (login) {
-					this.data = server.loginClient(name, password);
-					if (this.data == null) {
-						// client does not exist or passwords dont match
+							} else { //se login correu bem
+								authSuccessful = true;
+							}
+							break;
+						default: //qualquer outra mensagem inicial, nunca acho que aconteça, mas por segurança
+							StCErrorMsg error = new StCErrorMsg(-1,"First register or login to authenticate");
+							// não é necessário locks, só esta thread escreve 
+							error.serialize(out);
 					}
-				} else if (register) {
-					this.data = server.registerClient(name, password);
-				}
-
+				}	
 
 				outThread = new Thread(new AnswerClientOutput(out, data.outputBuffer)); // thread writing to the socket
 				outThread.start();
 
-				/////////////////////////////////////////////// CLIENT INFINITE LOOP
-				// ............
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-				byte opcode;
-				CtSAutMsg authMsg = null; // message received from client
-
-				// Authenticate client first
-				authMsg = new CtSAutMsg();
-				authMsg.deserialize(in);
-				System.out.println(authMsg.toString()); // debug
-				this.data = server.registerClient(authMsg.getName(), authMsg.getPassword());
-
-				// login client, get his ID or return error if wrong password
-				// ...???
-	
-	
+				// Client infinite loop
 				CtSMsg baseMsg = null;
 				ClientMessage<CtSMsg> msgToPush = new ClientMessage<>(); // message received from client with clientID
 
 				while (true) {
 					// receber dados da socket e colocar no buffer do servidor
-					opcode = in.readByte();
+					byte opcode = in.readByte();
+
 					switch (opcode) {
-						case 0:
+						// mensagens de execução são encaminhadas para buffer global em servidor
+						case 2:
 							baseMsg = new CtSExecMsg();
 							baseMsg.deserialize(in);
 							System.out.println(baseMsg.toString()); // debug
+
+							msgToPush.setClient(data.ID);
+							msgToPush.setMessage(baseMsg);
+							server.pushInputBufferClient(msgToPush, data); // push message to global server input array
+
 							break;
-						case 1: 
+
+						// mensagens de status são tratadas aqui, para caso fica locked a inserir no outputBuffer do cliente, so afetar esta thread
+						// Senão ter-se-ia de empurrar a mensagem para o buffer global, e possivelmente dar lock a uma das threads nesse buffer, o que atrasava o processamento de pedidos de outros clientes
+						case 3: 
 							baseMsg = new CtSStatusMsg();
 							baseMsg.deserialize(in);
 							System.out.println(baseMsg.toString()); // debug
+
+							try {
+								OcupationData ocupation = server.getOcupationData();
+								StCStatusMsg statusMsg = 
+									new StCStatusMsg(((CtSStatusMsg) baseMsg).getRequestN(), ocupation.getMemRemaining(),ocupation.getCurrentJobs());
+									
+								data.outputBuffer.push(statusMsg); // meter no output buffer de cliente
+							
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
 							break;
 					}
-					msgToPush.setClient(data.ID);
-					msgToPush.setMessage(baseMsg);
-					server.pushInputBufferClient(msgToPush, data); // push message to global server input array
 				}
-	
+
 			} catch (EOFException e) { // chamada quando socket fecha do outro lado e temos erro a dar read
 				in.close();
 				out.close();

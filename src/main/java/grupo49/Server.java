@@ -44,6 +44,14 @@ public class Server
 			this.memory_remaining = memory_remaining;
 			this.current_jobs = current_jobs;
 		}
+
+		public int getMemRemaining() {
+			return this.memory_remaining;
+		}
+
+		public int getCurrentJobs() {
+			return this.current_jobs;
+		}
 	}
 
 	private final int MaxJobsPerClient = 5;
@@ -57,7 +65,6 @@ public class Server
 		this.inputBufferClient = new BoundedBuffer<ClientMessage<CtSMsg>>(Server.inputBufferClientSize);
 		this.clientNameToIDMap = new HashMap<>();
 		this.clientNameToIDMapLock = new ReentrantReadWriteLock();
-
 
 		this.threadWorkerInfo = new ThreadWorkerInfo[Server.SchedulerThreadPoolSize];
 		for (int i = 0; i < threadWorkerInfo.length; i++) { // isto e preciso???? ou o construtor vazio ja e chamado
@@ -172,9 +179,8 @@ public class Server
 
 	// server pushes message to a client
 	// client is specified within the message itself (??????????????????????????????????????????????????????????????????????????????????????????????????)
-	public void pushClientOutput(StCMsg message) {
-		int clientID = -1; // FALTA ISTO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		ClientData clientInfo = getClient(clientID); // NAO USEI TWO PHASE LOCKING PORQUE CLIENTES NUNCA SAO REMOVIDOS
+	public void pushClientOutput(int clientId,  StCMsg message) {
+		ClientData clientInfo = getClient(clientId); // NAO USEI TWO PHASE LOCKING PORQUE CLIENTES NUNCA SAO REMOVIDOS
 		try {
 			// order of operations is important
 			// this way, job counts as finished once it enters output buffer
@@ -204,7 +210,7 @@ public class Server
 	public static final int SchedulerThreadPoolSize = 10; // threads que mandam coisas para workers
 
 	private ServerSocket socketToWorkers;
-	private BoundedBuffer<ClientMessage<StCMsg>> inputBufferWorker; // buffer onde workers colocam resultados de queries
+	private BoundedBuffer<ClientMessage<StCMsg>> inputBufferWorker; // buffer global de input para workers
 	private ThreadWorkerInfo[] threadWorkerInfo; // thread ID -> information about workers for that thread, and a lock associated with it.
 	// NOTA: threadWorkerInfo nao tem nenhuma lock pois a threadPool tem tamanho estatico e nada disto vai ser alterado
 	// mudei de list para [] para ser mais claro como nunca vai mudar,
@@ -232,21 +238,24 @@ public class Server
 	// push message into global input buffer for workers
 	// idk why a worker's memory and job count is changed here and not as soon as memory is received, I forgor
 	// will also change the values on the thread that controls this worker
-	public void pushInputBufferWorker(ClientMessage<StCMsg> message, WorkerData data) {
+	public void pushInputBufferWorker(ClientMessage<StCMsg> message, WorkerData data, int memUsed) {
 		try {
 			data.workerLock.writeLock().lock();
 
 			// nao vou usar isto porque ja temos a lock, podemos alterar diretamente
 			// data.addMemoryAndJobs(message.getMemory(), - 1);
-			data.memory += message.getMemory();
+
+			//como 
+			data.memory += memUsed;
 			data.jobs --;
 
 			// ja que mudamos no worker individual, aproveita-se tbm para mudar o acumulador nas threads
 			// nao sei se faz diferenca ser aqui ou fazer um unlock depois, nao pensei muito bem nisto mas vai dar ao mesmo acho eu
-			data.ownerThread.addMemoryAndJobs(new OcupationData(- message.getMemory(), -1));
+			data.ownerThread.addMemoryAndJobs(new OcupationData(- memUsed, -1));
 			
 			data.workerLock.writeLock().unlock(); // unlocked here since no other changes will be made and the push itself will block
 			inputBufferWorker.push(message);
+
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -321,12 +330,13 @@ public class Server
 		// criar threadpool de distribuir trabalho para workers
 		Thread schedulerThread;
 		for (int i = 0; i < threadWorkerInfo.length; i++) {
-			schedulerThread = new Thread(new SchedulerThreadRunnable(threadWorkerInfo[i], this.inputBufferWorker));
+			schedulerThread = new Thread(new SchedulerThreadRunnable(threadWorkerInfo[i], this.inputBufferClient));
 			schedulerThread.start();
 		}
 
 		Thread clientDispatcherThread;
 		for (int i = 0; i < ClientDispatcherThreads; i++) {
+			// algo de errado não está certo, ambas as duas funções recebem o mesmo buffer?????
 			clientDispatcherThread = new Thread(new ClientDispatcherThread(this, this.inputBufferWorker));
 			clientDispatcherThread.start();
 		}

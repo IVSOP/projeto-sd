@@ -22,17 +22,14 @@ public class ClientInputRunnable implements Runnable {
 					case 0:
 						message = new StCExecMsg();
 						message.deserialize(in);
-						inputBuffer.push(message);
 						break;
 					case 1:
 						message = new StCErrorMsg();
 						message.deserialize(in);
-						inputBuffer.push(message);
 						break;
 					case 2:
 						message = new StCStatusMsg();
 						message.deserialize(in);
-						inputBuffer.push(message);
 						break;
 				}
 				this.inputBuffer.push(message);

@@ -14,12 +14,12 @@ public class Worker
 
 	private Socket socket; // socket to server
 	private BoundedBuffer<ClientMessage<StWMsg>> inputBuffer;
-	private BoundedBuffer<ClientMessage<StCMsg>> outputBuffer;
+	private BoundedBuffer<ClientMessage<WtSMsg>> outputBuffer;
 	private int memory;
 
 	public Worker(String serverAddress, int memory) {
 		this.inputBuffer = new BoundedBuffer<ClientMessage<StWMsg>>(inputBufferSize);
-		this.outputBuffer = new BoundedBuffer<ClientMessage<StCMsg>>(outputBufferSize);
+		this.outputBuffer = new BoundedBuffer<ClientMessage<WtSMsg>>(outputBufferSize);
 		this.memory = 0;
 
 		try {
@@ -31,7 +31,7 @@ public class Worker
 	
 	public Worker(String serverAddress, String localAddress, int memory) {
 		this.inputBuffer = new BoundedBuffer<ClientMessage<StWMsg>>(inputBufferSize);
-		this.outputBuffer = new BoundedBuffer<ClientMessage<StCMsg>>(outputBufferSize);
+		this.outputBuffer = new BoundedBuffer<ClientMessage<WtSMsg>>(outputBufferSize);
 		this.memory = 0;
 		
 		try {													// por alguma razao local nao pode ser string mas destino pode

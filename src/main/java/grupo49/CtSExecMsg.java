@@ -8,7 +8,7 @@ import java.io.UnsupportedEncodingException;
 
 //Client to server execution request message
 public class CtSExecMsg implements CtSMsg {
-    private static final byte opcode = 0; // value to distinguish message server side
+    private static final byte opcode = 2; // value to distinguish message server side
     private int requestN; // request number (in clients pov)
     private int mem; // necessary memory in bytes
     private byte[] data; // request data
@@ -17,8 +17,8 @@ public class CtSExecMsg implements CtSMsg {
         // n faz nada, preencher com setters
     }
 
-    public CtSExecMsg(int requestN, int mem, byte[] bArray) {
-        this.requestN = requestN;
+    public CtSExecMsg(int mem, byte[] bArray) {
+        //this.requestN = requestN;
         this.mem = mem;
         this.data = bArray; //bArray.clone()?
     }

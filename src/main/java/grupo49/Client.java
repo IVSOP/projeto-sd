@@ -1,5 +1,7 @@
 package grupo49;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -69,8 +71,6 @@ public class Client
             Thread inputThread = new Thread(new ClientInputRunnable(in, inputBuffer));
             inputThread.start();
 
-            // AUTENTICAR AQUI
-
         } catch (IOException e) {
             //what to do if thread streams break
             e.printStackTrace();
@@ -81,10 +81,20 @@ public class Client
         return inputBuffer.pop();
 	}
 
-	public void sendRequest(CtSMsg msg) throws InterruptedException {
+	private void sendRequest(CtSMsg msg) throws InterruptedException {
 		requestID++;
         msg.setRequestN(requestID);
 		outputBuffer.push(msg);
+	}
+
+	public void sendExecMsg(int mem, byte[] barray) throws InterruptedException {
+		CtSMsg msg = new CtSExecMsg(mem,barray);
+		sendRequest(msg);
+	}
+
+	public void sendStatusMsg() throws InterruptedException {
+		CtSMsg msg = new CtSStatusMsg();
+		sendRequest(msg);
 	}
 
 	public void closeSocket() throws IOException {
@@ -101,14 +111,14 @@ public class Client
         try {
             Socket socket = new Socket("localhost", Server.PortToClient); // o host é conhecido do lado do cliente, neste caso o host do servidor é "localhost"
 
-            DataInputStream in = new DataInputStream(socket.getInputStream());
-            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+            DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+            DataOutputStream out = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 
-            CtSAutMsg testeMsg = new CtSAutMsg("User","pass");
+            CtSRegMsg testeMsg = new CtSRegMsg("User","pass");
             testeMsg.serialize(out);
 
-            CtSExecMsg testeMsg2 = new CtSExecMsg(1,150,"É o nosso guiador".getBytes());
-            testeMsg2.serialize(out);
+            // CtSExecMsg testeMsg2 = new CtSExecMsg(1,150,"É o nosso guiador".getBytes());
+            // testeMsg2.serialize(out);
 
             TimeUnit.SECONDS.sleep(10);
                 
