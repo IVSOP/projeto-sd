@@ -32,6 +32,18 @@
       <artifactId>commons-collections4</artifactId>
       <version>4.4</version>
     </dependency>
+	
+	<!-- sd23.jar -->
+	<!-- ANTES TEM DE SE CORRER ISTO -->
+	<!-- mvn install:install-file -Dfile=lib/sd23.jar -DgroupId=com.sample -DartifactId=sd23 -Dversion=1.0 -Dpackaging=jar -DgeneratePom=true -->
+	<!-- mvn clean install -->
+	<dependency>
+        <groupId>com.sample</groupId>
+        <artifactId>sd23</artifactId>
+        <version>1.0</version>
+        <!-- <scope>system</scope>
+        <systemPath>${project.basedir}/lib/sd23.jar</systemPath> -->
+    </dependency>
   </dependencies>
 
   <build>
