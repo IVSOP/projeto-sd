@@ -191,10 +191,15 @@ public class Server
 			// 		output buffer limit
 			// this way if client simply refuses to read from socket etc
 			// it cannot use many requests
-			clientInfo.serverPushLock.lock(); // precisamos da lock para alterar a variavel n_currentJobs
-			clientInfo.outputBuffer.push(message);
-			clientInfo.n_currentJobs --;
-			clientInfo.permissionToPush.signal(); // acordar 1 thread que esteja a esperar			
+			clientInfo.serverPushLock.lock(); // precisamos da lock para alterar a variavel n_currentJobs e para garantir que buffer nao e 'apagado'
+			if (clientInfo.outputBuffer != null) { // se client estiver logged out, vai ser null
+				clientInfo.outputBuffer.push(message);
+				clientInfo.n_currentJobs --;
+				clientInfo.permissionToPush.signal(); // acordar 1 thread que esteja a esperar			
+			} else { // por seguranca, reset completo de tudo. isto nao e muito bom, mas acho que previne crashar tudo com logouts inesperados
+				clientInfo.n_currentJobs --; // fingimos que 1 job foi concluido
+				clientInfo.permissionToPush.signal();
+			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		} finally {

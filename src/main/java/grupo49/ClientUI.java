@@ -3,7 +3,9 @@ package grupo49;
 import java.net.UnknownHostException;
 import java.util.Scanner;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 
 public class ClientUI {
@@ -25,6 +27,13 @@ public class ClientUI {
 
 
 		//???? é para colocar isto dentro do loop de pedidos e criar sendLoginMsg???
+
+		eu nao vou mexer no codigo aqui, vou so explicar depois muda-se
+		tu aqui nao tens server
+		o que tavamos a pensar e sempre que o cliente liga manda pedido com o nome e password
+		se ja existe, simplesmente fica interpretado como login
+		nao sei bem como e que isso ficou feito na pratica, nao fiz as mensagens
+
 		if (choice.equals("R")) {
 			if (!server.clientExists(username)) {
 				// Register

@@ -54,8 +54,9 @@ BoundedBuffer:
 	locks e conditions para que push() espere caso esteja cheio e pop() espere caso esteja vazio
 
 ClientData:
-	serverPushLock e permissionToPush (condition) referentes ao numero de jobs.
+	serverPushLock e permissionToPush (condition) referentes ao numero de jobs, e a alteracoes do proprio buffer (podemos meter buffer a null)
 	para ler (e opcionalmente escrever) no numero de jobs, a lock deve ser usada
+	para ver se buffer e null ou coloca-lo a null, tambem deve ser usada
 	a condition usa-se para dar push para o input buffer, no servidor: se o cliente tiver demasiados jobs ativos, espera nessa condition
 		wait: quando ha demasiados jobs
 		wake up: quando numero de jobs e decrementado (ao dar push para um cliente)
@@ -103,6 +104,9 @@ ClientData:
 		Server::pushInputBufferClient faz read e depois write, para incrementar -> feito por thread de input cliente
 		Server::pushClientOutput faz write, decrementa -> feito por uma thread de client dispatcher
 		threads diferentes, logo lock e necessaria
+	outputBuffer:
+		Server::pushClientOutput verifica que nao foi apagado -> feito por thread de dispatch para clientes
+		ClientData::removeOutputBuffer apaga o buffer -> feito por thread de input do cliente
 
 ThreadWorkerInfo:
 	totalMemoryRemaining e totalPendingJobs:

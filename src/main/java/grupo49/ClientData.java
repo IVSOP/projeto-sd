@@ -24,7 +24,9 @@ public class ClientData {
 		// NOTA IMPORTANTE: n_currentJobs nao precisa de locks para ler, pois pequenos desvios sao aceitaveis
 		// para escrever, usar a serverPushLock
 
-	public BoundedBuffer<StCMsg> outputBuffer;
+		// OUTRA NOTA: buffer fica == null quando client esta logged out
+		// aproveitamos a lock que existe acima para nao acontecer nada de mal noutra thread quando fazemos isso
+		public BoundedBuffer<StCMsg> outputBuffer;
 
 	public ClientData(String name, String password, int ID) {
 		this.password = password;
@@ -44,6 +46,8 @@ public class ClientData {
 	// para poupar memoria
 	// just sets it to null
 	public void removeOutputBuffer() {
+		this.serverPushLock.lock();
 		this.outputBuffer = null;
+		this.serverPushLock.unlock();
 	}
 }
