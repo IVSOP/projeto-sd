@@ -2,11 +2,17 @@ package grupo49;
 
 import java.net.UnknownHostException;
 import java.util.Scanner;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 
 public class ClientUI {
 	private static Scanner scanner = new Scanner(System.in);
 
 	public static void main(String[] args) throws UnknownHostException, InterruptedException {
+		//Escolha entre register e login
+		String choice = askForInput("Do you want to (R)egister or (L)ogin? ").toUpperCase();
+
 		String serverAddress = askForInput("Enter server IP: ");
 		// receber address do terminal (so apra evitar conflitos como ta tudo em localhost)
 		// String localAddress = String.valueOf(InetAddress.getLocalHost()); // cursed
@@ -17,9 +23,25 @@ public class ClientUI {
 		// criar cliente
 		Client client = new Client(serverAddress, localAddress, username, password);
 
-		// TODO: falta registar ou login
-		// client devia fazer sozinho, antes de poder fazer pedidos,
-		// mas devia dar para distinguir entre fazer register ou login e cliente devolve se login correu bem ou nao
+
+		//???? é para colocar isto dentro do loop de pedidos e criar sendLoginMsg???
+		if (choice.equals("R")) {
+			if (!server.clientExists(username)) {
+				// Register
+				server.registerClient(username, password);
+			} else {
+				System.out.println("Username already in use.")
+			}
+		} else if (choice.equals("L")) {
+			if (server.clientExists(username)) {
+				// Login
+				server.loginClient(username, password);
+			} else {
+				System.out.println("User doesn't exist.")
+			}
+		} else {
+			System.out.println("Invalid choice. Please enter 'R' for registration or 'L' for login.");
+		}
 		
 		Thread receiveThread = new Thread(() -> {
 			StCMsg message;
@@ -36,47 +58,77 @@ public class ClientUI {
 
 		// loop para permitir enviar pedidos
 		while (true) {
-			//TODO ########### distinguir entre exec, que segue a linha de funcoes abaixo
-
 			// pedir nome do ficheiro de input
 			// se for para dar submit e buffer de output estiver cheio, vai bloquear
 			String filePath = askForInput("Enter the file path: ");
-			int memNeeded = readMemFromFile(filePath);
-			byte[] requestMsg = readInputBytesFromFile(filePath);
-			client.sendExecMsg(memNeeded,requestMsg);
 
-			// TODO ########## ou então pedido de status
+			String messageType = readMessageTypeFromFile(filePath);
+
+			if ("EXEC".equals(messageType)) {
+				int memNeeded = readMemFromFile(filePath);
+				byte[] requestMsg = readInputBytesFromFile(filePath);
+				client.sendExecMsg(memNeeded,requestMsg);
+			}
+
+			else if ("STATUS".equals(messageType)) {
+				client.sendExecMsg();
+			}
 		}
 	}
-
-	// private static String getUsernameFromTerminal() {
-	// 	System.out.print("Enter your username: ");
-	// 	return scanner.nextLine();
-	// }
-
-	// private static String getPasswordFromTerminal() {
-	// 	System.out.print("Enter your password: ");
-	// 	return scanner.nextLine();
-	// }
-
-	// private static int getUserChoice() {
-	// 	System.out.print("Enter your choice: ");
-	// 	int choice = scanner.nextInt();
-	// 	scanner.nextLine();
-	// 	return choice;
-	// }
-
-	// private static String promptForFilePath() {
-	// 	System.out.print("Enter the file path: ");
-	// 	return scanner.nextLine();
-	// }
 
 	private static String askForInput(String msg) {
 		System.out.print(msg);
 		return scanner.nextLine();
 	}
 
-	private static CtSMsg readClientMessageFromFile(String filePath) {
-		return null;
-	}
+	//Supondo que a primeira linha indica o tipo de mensagem
+	private static String readMessageTypeFromFile(String filePath) {
+        String messageType = null;
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+            messageType = reader.readLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return messageType;
+    }
+
+	private static int readMemFromFile(String filePath) {
+        int memNeeded = 0;
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+            // Skip 1ª linha
+            reader.readLine();
+            memNeeded = (int) reader.lines()
+                .mapToInt(String::length)
+                .sum();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return memNeeded;
+    }
+
+	private static byte[] readInputBytesFromFile(String filePath) {
+        byte[] fileBytes = null;
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+            // Skip 1linha
+            reader.readLine();
+            StringBuilder content = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                content.append(line).append(System.lineSeparator());
+            }
+            fileBytes = content.toString().getBytes();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return fileBytes;
+    }
+
+	private static void writeToFile(StCMsg message) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("output.txt", true))) {
+            writer.write(message.getData);
+            writer.newLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
