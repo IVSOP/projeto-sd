@@ -21,8 +21,9 @@ public class Client
 
 	BoundedBuffer<CtSMsg> outputBuffer; // writes to server
 
-	Socket socket;
-
+	private Socket socket;
+	private DataInputStream in;
+	private DataOutputStream out;
 	String name;
 	String password;
 
@@ -36,8 +37,21 @@ public class Client
 
 		try {
 			this.socket = new Socket(serverAddress, Server.PortToClient);
-		} catch (Exception e) {
-			e.printStackTrace();
+
+			this.in = new DataInputStream(socket.getInputStream());
+            this.out = new DataOutputStream(socket.getOutputStream());
+
+            // thread dedicada a output
+            Thread outputThread = new Thread(new ClientOutputRunnable(out, outputBuffer));
+            outputThread.start();
+
+            // thread dedicada a input (nao fica aqui porque ClientUI ao chamar isto nao pode ficar bloqueada)
+            Thread inputThread = new Thread(new ClientInputRunnable(in, inputBuffer));
+            inputThread.start();
+
+        } catch (IOException e) {
+            //what to do if thread streams break
+            e.printStackTrace();
 		}
 	}
 
@@ -51,17 +65,9 @@ public class Client
 
 		try {													// por alguma razao local nao pode ser string mas destino pode
 			this.socket = new Socket(serverAddress, Server.PortToClient, InetAddress.getByName(localAddress), Server.PortToClient); // local port does not matter
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
 
-	public void mainLoop() {
-        try {
-            Socket socket = new Socket("localhost", Server.PortToClient); // o host é conhecido do lado do cliente, neste caso o host do servidor é "localhost"
-
-            DataInputStream in = new DataInputStream(socket.getInputStream());
-            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+			this.in = new DataInputStream(socket.getInputStream());
+            this.out = new DataOutputStream(socket.getOutputStream());
 
             // thread dedicada a output
             Thread outputThread = new Thread(new ClientOutputRunnable(out, outputBuffer));
@@ -74,17 +80,33 @@ public class Client
         } catch (IOException e) {
             //what to do if thread streams break
             e.printStackTrace();
-    	}
-    }
-
-	public StCMsg getNextAnswer() throws InterruptedException{
-        return inputBuffer.pop();
+		}
 	}
 
 	private void sendRequest(CtSMsg msg) throws InterruptedException {
-		requestID++;
-        msg.setRequestN(requestID);
+	requestID++;
+	msg.setRequestN(requestID);
+	outputBuffer.push(msg);
+	}
+
+	public boolean registerClient() throws IOException, InterruptedException{
+		CtSMsg msg = (CtSMsg) new CtSRegMsg(name,password);
 		outputBuffer.push(msg);
+		StCAuthMsg response = new StCAuthMsg();
+		response.deserialize(in);
+		return response.getSuccess();
+	}
+
+	public boolean loginClient() throws IOException, InterruptedException {
+		CtSMsg msg = (CtSMsg) new CtSLoginMsg(name,password);
+		outputBuffer.push(msg);
+		StCAuthMsg response = new StCAuthMsg();
+		response.deserialize(in);
+		return response.getSuccess();
+	}
+	 
+	public StCMsg getNextAnswer() throws InterruptedException{
+        return inputBuffer.pop();
 	}
 
 	public void sendExecMsg(int mem, byte[] barray) throws InterruptedException {
@@ -97,6 +119,7 @@ public class Client
 		sendRequest(msg);
 	}
 
+	//acho que isto é desnecessário se fizermos "implements AutoCloseable" na classe
 	public void closeSocket() throws IOException {
 		socket.shutdownOutput();
 		socket.shutdownInput();
@@ -105,30 +128,30 @@ public class Client
 
 	// main receives server IP and local IP. in the future add info to automate sending work?
 	// NOT IMPLEMENTED
-	public static void main( String[] args )
-    {
-        System.out.println( "Hello World client!" );
-        try {
-            Socket socket = new Socket("localhost", Server.PortToClient); // o host é conhecido do lado do cliente, neste caso o host do servidor é "localhost"
+	// public static void main( String[] args )
+    // {
+    //     System.out.println( "Hello World client!" );
+    //     try {
+    //         Socket socket = new Socket("localhost", Server.PortToClient); // o host é conhecido do lado do cliente, neste caso o host do servidor é "localhost"
 
-            DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
-            DataOutputStream out = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+    //         DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+    //         DataOutputStream out = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 
-            CtSRegMsg testeMsg = new CtSRegMsg("User","pass");
-            testeMsg.serialize(out);
+    //         CtSRegMsg testeMsg = new CtSRegMsg("User","pass");
+    //         testeMsg.serialize(out);
 
-            // CtSExecMsg testeMsg2 = new CtSExecMsg(1,150,"É o nosso guiador".getBytes());
-            // testeMsg2.serialize(out);
+    //         // CtSExecMsg testeMsg2 = new CtSExecMsg(1,150,"É o nosso guiador".getBytes());
+    //         // testeMsg2.serialize(out);
 
-            TimeUnit.SECONDS.sleep(10);
+    //         TimeUnit.SECONDS.sleep(10);
                 
-            socket.shutdownOutput();
-            socket.shutdownInput();
-            socket.close();
+    //         socket.shutdownOutput();
+    //         socket.shutdownInput();
+    //         socket.close();
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    //     } catch (Exception e) {
+    //         e.printStackTrace();
+    //     }
 
-    }
+    // }
 }

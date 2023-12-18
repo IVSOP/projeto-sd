@@ -2,6 +2,9 @@ package grupo49;
 
 import java.net.UnknownHostException;
 import java.util.Scanner;
+
+import javax.sound.midi.SysexMessage;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileReader;
@@ -12,9 +15,51 @@ public class ClientUI {
 	private static Scanner scanner = new Scanner(System.in);
 
 	public static void main(String[] args) throws UnknownHostException, InterruptedException {
-		//Escolha entre register e login
-		String choice = askForInput("Do you want to (R)egister or (L)ogin? ").toUpperCase();
 
+		//register/login loop
+		Client client = authenticateClient();
+		
+		Thread receiveThread = new Thread(() -> {
+			StCMsg message;
+			try {
+				while (true) {
+					message = client.getNextAnswer();
+					System.out.println("Message " + message.getRequestN() + " arrived, writing to file");
+					writeToFile(message);
+				}
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		});
+		receiveThread.start();
+
+		// loop para permitir enviar pedidos
+		String input = askForInput("Actions available:\n1. Execution request\n2. Service status\n");
+		while (true) {
+
+			if (input.equals("1")) { // Pedido de execução
+				// pedir nome do ficheiro de input
+				// se for para dar submit e buffer de output estiver cheio, vai bloquear
+				String filePath = askForInput("Enter the file path for job input: ");
+				int memNeeded = readMemFromFile(filePath);
+				byte[] requestMsg = readInputBytesFromFile(filePath);
+				client.sendExecMsg(memNeeded,requestMsg);
+			}
+			else if (input.equals("2")) { // Pedido de estado
+				client.sendStatusMsg();
+			}
+			else { // Se user meter outro input qualquer
+				System.out.println("Invalid choice. Please enter '1' for \"Execution request\" or '2' for \"Service Status\"");
+			}
+	}
+}
+
+	private static String askForInput(String msg) {
+		System.out.print(msg);
+		return scanner.nextLine();
+	}
+
+	private static Client authenticateClient() {
 		String serverAddress = askForInput("Enter server IP: ");
 		// receber address do terminal (so apra evitar conflitos como ta tudo em localhost)
 		// String localAddress = String.valueOf(InetAddress.getLocalHost()); // cursed
@@ -25,87 +70,48 @@ public class ClientUI {
 		// criar cliente
 		Client client = new Client(serverAddress, localAddress, username, password);
 
+		//Escolha entre register e login
+		String choice = askForInput("Do you want to (R)egister or (L)ogin? ").toUpperCase();
 
-		//???? é para colocar isto dentro do loop de pedidos e criar sendLoginMsg???
-
-		eu nao vou mexer no codigo aqui, vou so explicar depois muda-se
-		tu aqui nao tens server
-		o que tavamos a pensar e sempre que o cliente liga manda pedido com o nome e password
-		se ja existe, simplesmente fica interpretado como login
-		nao sei bem como e que isso ficou feito na pratica, nao fiz as mensagens
-
-		if (choice.equals("R")) {
-			if (!server.clientExists(username)) {
-				// Register
-				server.registerClient(username, password);
-			} else {
-				System.out.println("Username already in use.")
-			}
-		} else if (choice.equals("L")) {
-			if (server.clientExists(username)) {
-				// Login
-				server.loginClient(username, password);
-			} else {
-				System.out.println("User doesn't exist.")
-			}
-		} else {
-			System.out.println("Invalid choice. Please enter 'R' for registration or 'L' for login.");
-		}
-		
-		Thread receiveThread = new Thread(() -> {
-			StCMsg message;
+		boolean authSuccessful = false;
+		while (!authSuccessful) {
 			try {
-				while (true) {
-					message = client.getNextAnswer();
-					writeToFile(message);
+				if (choice.equals("R")) { // register
+					authSuccessful = client.registerClient();
+					if (!authSuccessful) {
+						System.out.println("Register failed. Username already in use.");
+					}
+					else {
+						authSuccessful = true;
+						System.out.println("Registered client successfully");
+					}
+
+				} else if (choice.equals("L")) { //login
+					authSuccessful = client.loginClient();
+					if (!authSuccessful) {
+						System.out.println("Login failed. Client not registered, or password doesn't match");
+					} else {
+						authSuccessful = true;
+						System.out.println("Logged in client successfully");
+					}
+
+				} else { // Se user meter outro input qualquer
+					System.out.println("Invalid choice. Please enter 'R' for registration or 'L' for login.");
 				}
 			} catch (InterruptedException e) {
+				// o que fazer aqui??
+				e.printStackTrace();
+			} catch (IOException e) {
+				// o que fazer aqui??
 				e.printStackTrace();
 			}
-		});
-		receiveThread.start();
-
-		// loop para permitir enviar pedidos
-		while (true) {
-			// pedir nome do ficheiro de input
-			// se for para dar submit e buffer de output estiver cheio, vai bloquear
-			String filePath = askForInput("Enter the file path: ");
-
-			String messageType = readMessageTypeFromFile(filePath);
-
-			if ("EXEC".equals(messageType)) {
-				int memNeeded = readMemFromFile(filePath);
-				byte[] requestMsg = readInputBytesFromFile(filePath);
-				client.sendExecMsg(memNeeded,requestMsg);
-			}
-
-			else if ("STATUS".equals(messageType)) {
-				client.sendExecMsg();
-			}
 		}
+		return client;
 	}
-
-	private static String askForInput(String msg) {
-		System.out.print(msg);
-		return scanner.nextLine();
-	}
-
-	//Supondo que a primeira linha indica o tipo de mensagem
-	private static String readMessageTypeFromFile(String filePath) {
-        String messageType = null;
-        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
-            messageType = reader.readLine();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return messageType;
-    }
 
 	private static int readMemFromFile(String filePath) {
         int memNeeded = 0;
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
-            // Skip 1ª linha
-            reader.readLine();
             memNeeded = (int) reader.lines()
                 .mapToInt(String::length)
                 .sum();
@@ -118,8 +124,8 @@ public class ClientUI {
 	private static byte[] readInputBytesFromFile(String filePath) {
         byte[] fileBytes = null;
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
-            // Skip 1linha
-            reader.readLine();
+			// Skip 1ª linha
+			reader.readLine();
             StringBuilder content = new StringBuilder();
             String line;
             while ((line = reader.readLine()) != null) {
@@ -134,7 +140,7 @@ public class ClientUI {
 
 	private static void writeToFile(StCMsg message) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter("output.txt", true))) {
-            writer.write(message.getData);
+            writer.write(message.toString());
             writer.newLine();
         } catch (IOException e) {
             e.printStackTrace();

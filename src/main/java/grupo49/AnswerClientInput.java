@@ -58,8 +58,16 @@ public class AnswerClientInput implements Runnable {
 						case 0: //authentication
 							CtSRegMsg authMsg = new CtSRegMsg();
 							authMsg.deserialize(in);
-							this.data = server.registerClient(authMsg.getName(), authMsg.getPassword());
-							authSuccessful = true;
+							boolean clientExists = server.clientExists(authMsg.getName());
+							if (!clientExists) {
+								StCAuthMsg regFail = new StCAuthMsg(authSuccessful, "Client doesn't exist");
+								regFail.serialize(out);
+							} else {
+								this.data = server.registerClient(authMsg.getName(), authMsg.getPassword());
+								authSuccessful = true;
+								StCAuthMsg regTrue = new StCAuthMsg(authSuccessful, "Client registered correctly");
+								regTrue.serialize(out);
+							}
 							break;
 
 						case 1: //login
@@ -67,18 +75,21 @@ public class AnswerClientInput implements Runnable {
 							loginMsg.deserialize(in);
 							this.data = server.loginClient(loginMsg.getName(), loginMsg.getPassword());
 							if (this.data == null) { // se login correu mal
-								StCErrorMsg error = new StCErrorMsg(-1,"Client not registered, or password doesn't match");
+								StCAuthMsg logFail = new StCAuthMsg(authSuccessful, "Client not registered, or password doesn't match");
 								// não é necessário locks, só esta thread escreve 
-								error.serialize(out);
+								logFail.serialize(out);
 
 							} else { //se login correu bem
 								authSuccessful = true;
+								StCAuthMsg logCorr = new StCAuthMsg(authSuccessful, "Client login successful");
+								// não é necessário locks, só esta thread escreve 
+								logCorr.serialize(out);
 							}
 							break;
 						default: //qualquer outra mensagem inicial, nunca acho que aconteça, mas por segurança
-							StCErrorMsg error = new StCErrorMsg(-1,"First register or login to authenticate");
+							StCAuthMsg other = new StCAuthMsg(authSuccessful, "First register or login to authenticate");
 							// não é necessário locks, só esta thread escreve 
-							error.serialize(out);
+							other.serialize(out);
 					}
 				}	
 
