@@ -1,15 +1,10 @@
 package grupo49;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.concurrent.TimeUnit;
-
 
 public class Client
 {
@@ -46,8 +41,8 @@ public class Client
 		outputThread.start();
 
 		// thread dedicada a input (nao fica aqui porque ClientUI ao chamar isto nao pode ficar bloqueada)
-		Thread inputThread = new Thread(new ClientInputRunnable(in, inputBuffer));
-		inputThread.start();
+		// Thread inputThread = new Thread(new ClientInputRunnable(in, inputBuffer));
+		// inputThread.start();
 
 	}
 
@@ -69,8 +64,8 @@ public class Client
 		outputThread.start();
 
 		// thread dedicada a input (nao fica aqui porque ClientUI ao chamar isto nao pode ficar bloqueada)
-		Thread inputThread = new Thread(new ClientInputRunnable(in, inputBuffer));
-		inputThread.start();
+		// Thread inputThread = new Thread(new ClientInputRunnable(in, inputBuffer));
+		// inputThread.start();
 	}
 
 	private void sendRequest(CtSMsg msg) throws InterruptedException {
@@ -83,16 +78,24 @@ public class Client
 		CtSMsg msg = new CtSRegMsg(name,password);
 		outputBuffer.push(msg);
 		StCAuthMsg response = new StCAuthMsg();
+		in.readByte(); //ignorar
 		response.deserialize(in);
 		return response.getSuccess();
 	}
 
 	public boolean loginClient() throws IOException, InterruptedException {
-		CtSMsg msg = (CtSMsg) new CtSLoginMsg(name,password);
+		CtSMsg msg = new CtSLoginMsg(name,password);
 		outputBuffer.push(msg);
 		StCAuthMsg response = new StCAuthMsg();
+		in.readByte(); //ignorar
 		response.deserialize(in);
 		return response.getSuccess();
+	}
+
+	//EXTREMAMENTE CURSED, VER MELHOR DEPOIS!!!
+	public void startInput() {
+		Thread inputThread = new Thread(new ClientInputRunnable(in, inputBuffer));
+		inputThread.start();
 	}
 	 
 	public StCMsg getNextAnswer() throws InterruptedException{

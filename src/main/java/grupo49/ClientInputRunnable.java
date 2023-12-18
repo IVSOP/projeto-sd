@@ -15,9 +15,10 @@ public class ClientInputRunnable implements Runnable {
 	@Override
 	public void run() {
 		try {
-			StCMsg message = null;
-            while (true) {
-				int opcode = in.readByte();
+			while (true) {
+				StCMsg message = null;
+				byte opcode = in.readByte();
+				System.out.println("Received message from server opcode: " + opcode);
 				switch(opcode){
 					case 0:
 						message = new StCExecMsg();

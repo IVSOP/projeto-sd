@@ -16,7 +16,9 @@ public class ClientUI {
 
 		//register/login loop
 		Client client = authenticateClient();
-		
+
+		client.startInput();
+
 		Thread receiveThread = new Thread(() -> {
 			StCMsg message;
 			try {
@@ -32,9 +34,10 @@ public class ClientUI {
 		receiveThread.start();
 
 		// loop para permitir enviar pedidos
-		String input = askForInput("Actions available:\n1. Execution request\n2. Service status\n");
+		String input;
+		System.out.println("Actions available:\n1. Execution request\n2. Service status\n");
 		while (true) {
-
+			input = askForInput("Input:");
 			if (input.equals("1")) { // Pedido de execução
 				// pedir nome do ficheiro de input
 				// se for para dar submit e buffer de output estiver cheio, vai bloquear
@@ -76,10 +79,11 @@ public class ClientUI {
 		}
 
 		//Escolha entre register e login
-		String choice = askForInput("Do you want to (R)egister or (L)ogin? ").toUpperCase();
-
+		String choice;
+		System.out.println("Do you want to (R)egister or (L)ogin?");
 		boolean authSuccessful = false;
 		while (!authSuccessful) {
+			choice = askForInput("Input:").toUpperCase();
 			try {
 				if (choice.equals("R")) { // register
 					authSuccessful = client.registerClient();
@@ -87,7 +91,6 @@ public class ClientUI {
 						System.out.println("Register failed. Username already in use.");
 					}
 					else {
-						authSuccessful = true;
 						System.out.println("Registered client successfully");
 					}
 
@@ -96,21 +99,18 @@ public class ClientUI {
 					if (!authSuccessful) {
 						System.out.println("Login failed. Client not registered, or password doesn't match");
 					} else {
-						authSuccessful = true;
 						System.out.println("Logged in client successfully");
 					}
 
 				} else { // Se user meter outro input qualquer
 					System.out.println("Invalid choice. Please enter 'R' for registration or 'L' for login.");
 				}
-			} catch (InterruptedException e) {
-				// o que fazer aqui??
+			} catch (Exception e) {
 				e.printStackTrace();
-			} catch (IOException e) {
-				// o que fazer aqui??
-				e.printStackTrace();
+				System.exit(-2);
 			}
 		}
+		System.out.println("Client authenticated");
 		return client;
 	}
 

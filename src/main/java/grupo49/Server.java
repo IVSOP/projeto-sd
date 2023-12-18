@@ -3,9 +3,7 @@ package grupo49;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 // import java.util.concurrent.locks.Condition;
 // import java.util.concurrent.locks.ReentrantLock;
@@ -140,7 +138,8 @@ public class Server
 
 			clientMapLock.readLock().lock();
 			ClientData data = clientMap.get(clientID);
-			if (data != null && data.password == password) {
+			
+			if (data != null && data.password.equals(password)) {
 				data.createOutputBuffer(); // !!!!!!!!!!!!!!!!!
 				return data;
 			} else {

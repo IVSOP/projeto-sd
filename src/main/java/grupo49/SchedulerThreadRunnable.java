@@ -1,7 +1,5 @@
 package grupo49;
 
-import grupo49.Server.OcupationData;
-
 public class SchedulerThreadRunnable implements Runnable {
 	private ThreadWorkerInfo workers;
 	private BoundedBuffer<ClientMessage<CtSMsg>> inputBuffer;

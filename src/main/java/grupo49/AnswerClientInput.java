@@ -6,8 +6,6 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.net.Socket;
 
-import javax.sound.midi.SysexMessage;
-
 import grupo49.Server.OcupationData;
 
 // input
@@ -57,41 +55,54 @@ public class AnswerClientInput implements Runnable {
 				
 				while (!authSuccessful) {
 					byte opcode = in.readByte();
+					boolean clientExists;
 					// Authenticate client first
 					switch (opcode) {
-						case 0: //authentication
+						case 0: // register
 							CtSRegMsg authMsg = new CtSRegMsg();
 							authMsg.deserialize(in);
-							boolean clientExists = server.clientExists(authMsg.getName());
-							if (!clientExists) {
-								StCAuthMsg regFail = new StCAuthMsg(authSuccessful, "Client doesn't exist");
+							System.out.println(authMsg.toString());
+							clientExists = server.clientExists(authMsg.getName());
+							if (clientExists) {
+								System.out.println( "Received Client register: name already exists");
+								StCAuthMsg regFail = new StCAuthMsg(false, "Client already exists");
 								regFail.serialize(out);
 							} else {
+								System.out.println("Received Client register: successful register");
 								this.data = server.registerClient(authMsg.getName(), authMsg.getPassword());
 								authSuccessful = true;
-								StCAuthMsg regTrue = new StCAuthMsg(authSuccessful, "Client registered correctly");
+								StCAuthMsg regTrue = new StCAuthMsg(true, "Client registered correctly");
 								regTrue.serialize(out);
 							}
 							break;
-
 						case 1: //login
 							CtSLoginMsg loginMsg = new CtSLoginMsg();
 							loginMsg.deserialize(in);
-							this.data = server.loginClient(loginMsg.getName(), loginMsg.getPassword());
-							if (this.data == null) { // se login correu mal
-								StCAuthMsg logFail = new StCAuthMsg(authSuccessful, "Client not registered, or password doesn't match");
+							System.out.println(loginMsg.toString());
+							clientExists = server.clientExists(loginMsg.getName());
+							if (!clientExists) { // se login correu mal
+								System.out.println("Received Client login: name doesn't exist");
+							StCAuthMsg logFail = new StCAuthMsg(false, "Client not registered");
+							// não é necessário locks, só esta thread escreve 
+							logFail.serialize(out);
+							}
+							else if ((this.data = server.loginClient(loginMsg.getName(), loginMsg.getPassword())) == null) { // se login correu mal
+								System.out.println("Received Client login: couldn't login credentials");
+								StCAuthMsg logFail = new StCAuthMsg(false, "Password doesn't match");
 								// não é necessário locks, só esta thread escreve 
 								logFail.serialize(out);
 
 							} else { //se login correu bem
 								authSuccessful = true;
-								StCAuthMsg logCorr = new StCAuthMsg(authSuccessful, "Client login successful");
+								System.out.println("Received Client login: login successfull");
+								StCAuthMsg logCorr = new StCAuthMsg(true, "Client login successful");
 								// não é necessário locks, só esta thread escreve 
 								logCorr.serialize(out);
 							}
 							break;
 						default: //qualquer outra mensagem inicial, nunca acho que aconteça, mas por segurança
-							StCAuthMsg other = new StCAuthMsg(authSuccessful, "First register or login to authenticate");
+							System.out.println("Received Client not reg/log: wrong type");
+							StCAuthMsg other = new StCAuthMsg(false, "First register or login to authenticate");
 							// não é necessário locks, só esta thread escreve 
 							other.serialize(out);
 					}

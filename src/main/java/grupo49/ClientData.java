@@ -50,4 +50,13 @@ public class ClientData {
 		this.outputBuffer = null;
 		this.serverPushLock.unlock();
 	}
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("id " + this.ID);
+        sb.append("name: +" + this.name);
+		sb.append("password" + this.password);
+        return sb.toString();
+    }
 }
