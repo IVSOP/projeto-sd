@@ -3,8 +3,6 @@ package grupo49;
 import java.net.UnknownHostException;
 import java.util.Scanner;
 
-import javax.sound.midi.SysexMessage;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileReader;
@@ -62,13 +60,20 @@ public class ClientUI {
 	private static Client authenticateClient() {
 		String serverAddress = askForInput("Enter server IP: ");
 		// receber address do terminal (so apra evitar conflitos como ta tudo em localhost)
-		// String localAddress = String.valueOf(InetAddress.getLocalHost()); // cursed
-		String localAddress = askForInput("Enter local IP: ");
+		//String localAddress = askForInput("Enter local IP: ");
 		// receber nome e password do terminal
 		String username = askForInput("Enter your username: ");
 		String password = askForInput("Enter your password: ");
+
 		// criar cliente
-		Client client = new Client(serverAddress, localAddress, username, password);
+		Client client = null;
+		try {
+			client = new Client(serverAddress, username, password);
+			//client = new Client(serverAddress, localAddress, username, password);
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.exit(-1);
+		}
 
 		//Escolha entre register e login
 		String choice = askForInput("Do you want to (R)egister or (L)ogin? ").toUpperCase();

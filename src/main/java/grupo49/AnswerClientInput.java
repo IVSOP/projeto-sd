@@ -6,6 +6,8 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.net.Socket;
 
+import javax.sound.midi.SysexMessage;
+
 import grupo49.Server.OcupationData;
 
 // input
@@ -48,6 +50,8 @@ public class AnswerClientInput implements Runnable {
 		try {
 			DataInputStream in = new DataInputStream(socket.getInputStream());
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+
+			System.out.println("New client connection");
 			try {
 				boolean authSuccessful = false;
 				

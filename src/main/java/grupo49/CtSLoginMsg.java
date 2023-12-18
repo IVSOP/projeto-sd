@@ -6,7 +6,7 @@ import java.io.IOException;
 
 
 //Client to server authentication and register message
-public class CtSLoginMsg {
+public class CtSLoginMsg implements CtSMsg{
     private static final byte opcode = 1; // value to distinguish message server side
     private String name;
     private String password;
@@ -49,6 +49,8 @@ public class CtSLoginMsg {
     private void setPassword(String pass) {
         this.password = pass;
     }
+
+    public void setRequestN(int val) {} // só está aqui pela interface
 
     @Override
     public String toString() {

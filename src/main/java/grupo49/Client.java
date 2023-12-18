@@ -7,6 +7,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.concurrent.TimeUnit;
 
 
@@ -27,7 +28,7 @@ public class Client
 	String name;
 	String password;
 
-	public Client(String serverAddress, String name, String password) {
+	public Client(String serverAddress, String name, String password) throws UnknownHostException, IOException {
 		this.inputBuffer = new BoundedBuffer<StCMsg>(inputBufferSize);
 		this.outputBuffer = new BoundedBuffer<CtSMsg>(outputBufferSize);
 
@@ -35,52 +36,41 @@ public class Client
 		this.name = name;
 		this.password = password;
 
-		try {
-			this.socket = new Socket(serverAddress, Server.PortToClient);
+		this.socket = new Socket(serverAddress, Server.PortToClient);
 
-			this.in = new DataInputStream(socket.getInputStream());
-            this.out = new DataOutputStream(socket.getOutputStream());
+		this.in = new DataInputStream(socket.getInputStream());
+		this.out = new DataOutputStream(socket.getOutputStream());
 
-            // thread dedicada a output
-            Thread outputThread = new Thread(new ClientOutputRunnable(out, outputBuffer));
-            outputThread.start();
+		// thread dedicada a output
+		Thread outputThread = new Thread(new ClientOutputRunnable(out, outputBuffer));
+		outputThread.start();
 
-            // thread dedicada a input (nao fica aqui porque ClientUI ao chamar isto nao pode ficar bloqueada)
-            Thread inputThread = new Thread(new ClientInputRunnable(in, inputBuffer));
-            inputThread.start();
+		// thread dedicada a input (nao fica aqui porque ClientUI ao chamar isto nao pode ficar bloqueada)
+		Thread inputThread = new Thread(new ClientInputRunnable(in, inputBuffer));
+		inputThread.start();
 
-        } catch (IOException e) {
-            //what to do if thread streams break
-            e.printStackTrace();
-		}
 	}
 
-	public Client(String serverAddress, String localAddress, String name, String password) {
+	public Client(String serverAddress, String localAddress, String name, String password) throws IOException {
 		this.inputBuffer = new BoundedBuffer<StCMsg>(inputBufferSize);
 		this.outputBuffer = new BoundedBuffer<CtSMsg>(outputBufferSize);
 
 		this.requestID = 0;
 		this.name = name;
 		this.password = password;
+													// por alguma razao local nao pode ser string mas destino pode
+		//this.socket = new Socket(serverAddress, Server.PortToClient, InetAddress.getByName(localAddress), Server.PortToClient); // local port does not matter
+		this.socket = new Socket(serverAddress, Server.PortToClient);
+		this.in = new DataInputStream(socket.getInputStream());
+		this.out = new DataOutputStream(socket.getOutputStream());
 
-		try {													// por alguma razao local nao pode ser string mas destino pode
-			this.socket = new Socket(serverAddress, Server.PortToClient, InetAddress.getByName(localAddress), Server.PortToClient); // local port does not matter
+		// thread dedicada a output
+		Thread outputThread = new Thread(new ClientOutputRunnable(out, outputBuffer));
+		outputThread.start();
 
-			this.in = new DataInputStream(socket.getInputStream());
-            this.out = new DataOutputStream(socket.getOutputStream());
-
-            // thread dedicada a output
-            Thread outputThread = new Thread(new ClientOutputRunnable(out, outputBuffer));
-            outputThread.start();
-
-            // thread dedicada a input (nao fica aqui porque ClientUI ao chamar isto nao pode ficar bloqueada)
-            Thread inputThread = new Thread(new ClientInputRunnable(in, inputBuffer));
-            inputThread.start();
-
-        } catch (IOException e) {
-            //what to do if thread streams break
-            e.printStackTrace();
-		}
+		// thread dedicada a input (nao fica aqui porque ClientUI ao chamar isto nao pode ficar bloqueada)
+		Thread inputThread = new Thread(new ClientInputRunnable(in, inputBuffer));
+		inputThread.start();
 	}
 
 	private void sendRequest(CtSMsg msg) throws InterruptedException {
@@ -90,7 +80,7 @@ public class Client
 	}
 
 	public boolean registerClient() throws IOException, InterruptedException{
-		CtSMsg msg = (CtSMsg) new CtSRegMsg(name,password);
+		CtSMsg msg = new CtSRegMsg(name,password);
 		outputBuffer.push(msg);
 		StCAuthMsg response = new StCAuthMsg();
 		response.deserialize(in);
