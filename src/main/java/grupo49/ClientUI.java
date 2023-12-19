@@ -116,7 +116,11 @@ public class ClientUI {
 	}
 
 	private static String getOutputPath() {
-		return askForInput("Output file for exec msgs: ");
+		String path = askForInput("Output file for exec msgs: ");
+		if (!path.endsWith("/")) {
+			path += "/";
+		}
+		return path;
 	}
 
 	private static int readMemFromFile(String filePath) {
@@ -132,8 +136,8 @@ public class ClientUI {
 	private static byte[] readInputBytesFromFile(String filePath) {
         byte[] fileBytes = null;
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
-			// // Skip 1ª linha // já foi dado quando se chama readMem
-			// reader.readLine();
+			// // Skip 1ª linha
+			reader.readLine();
             StringBuilder content = new StringBuilder();
             String line;
             while ((line = reader.readLine()) != null) {
@@ -149,9 +153,10 @@ public class ClientUI {
 
 	private static void writeToFile(StCMsg message, String outputPath) {
 		// qual é suposto ser o ficheiro de output?? muda para cada request, muda para cada cliente?
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputPath, true))) {
+        String outputFile = outputPath + message.getRequestN() + ".txt";
+		try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true))) {
             writer.write(message.toString());
-            writer.newLine();
+            //writer.newLine();
         } catch (IOException e) {
             e.printStackTrace();
         }

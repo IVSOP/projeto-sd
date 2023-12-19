@@ -60,16 +60,28 @@ public class StCExecMsg implements StCMsg {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("reqN: " + this.requestN);
         String byteData = "";
         try {
             byteData = new String(this.data,"UTF-8");
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
-        sb.append(" data in stringFormat: " + byteData);
+        sb.append(byteData);
         return sb.toString();
     }
+
+    public String toString2() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("reqN: " + this.requestN);
+    String byteData = "";
+    try {
+        byteData = new String(this.data,"UTF-8");
+    } catch (UnsupportedEncodingException e) {
+        e.printStackTrace();
+    }
+    sb.append(" data in stringFormat: " + byteData);
+    return sb.toString();
+}
 }
 
 
