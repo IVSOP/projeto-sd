@@ -58,7 +58,7 @@ public class StCErrorMsg implements StCMsg {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("reqN: " + this.requestN);
-        sb.append("error: +" + this.error);
+        sb.append(" error: +" + this.error);
         return sb.toString();
     }
 }

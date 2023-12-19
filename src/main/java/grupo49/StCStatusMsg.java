@@ -68,8 +68,8 @@ public class StCStatusMsg implements StCMsg {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("reqN: " + this.requestN);
-        sb.append("mem: " + this.mem);
-        sb.append("pending: " + this.pending);
+        sb.append(" mem: " + this.mem);
+        sb.append(" pending: " + this.pending);
         return sb.toString();
     }
 }

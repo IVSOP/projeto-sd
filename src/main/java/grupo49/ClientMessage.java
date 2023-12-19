@@ -13,8 +13,12 @@ public class ClientMessage<T extends IMessage> {
     private int clientId; // client identifier (assigned by server)
     private T message; // client message: CtSMsg, StCMsg, WtSMsg
 
+    //to be filled in deserialize
     ClientMessage () {
-        //fill with setters
+    }
+    
+    ClientMessage(T msg) {
+        this.message = msg;
     }
     
     ClientMessage(int id, T msg) {
@@ -49,5 +53,11 @@ public class ClientMessage<T extends IMessage> {
         this.setClient(dis.readInt());
     }
 
-
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("clientID: " + this.clientId);
+       sb.append(this.message.toString());
+        return sb.toString();
+    }
 }

@@ -33,7 +33,7 @@ Server:
 	AnswerClientOutput:
 		Le mensagens do buffer de output de um cliente e envia para a sua socket.
 	WorkerLoop:
-		Permite receber conexoes de novos clientes
+		Permite receber conexoes de novos workers
 	HandleWorkerInput:
 		Regista o worker, le as suas mensagens e coloca no buffer de input para workers do servidor
 		Cria a thread da classe abaixo

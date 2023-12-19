@@ -138,7 +138,7 @@ public class Server
 
 			clientMapLock.readLock().lock();
 			ClientData data = clientMap.get(clientID);
-			
+
 			if (data != null && data.password.equals(password)) {
 				data.createOutputBuffer(); // !!!!!!!!!!!!!!!!!
 				return data;
@@ -177,7 +177,6 @@ public class Server
 	}
 
 	// server pushes message to a client
-	// client is specified within the message itself (??????????????????????????????????????????????????????????????????????????????????????????????????)
 	public void pushClientOutput(int clientId,  StCMsg message) {
 		ClientData clientInfo = getClient(clientId); // NAO USEI TWO PHASE LOCKING PORQUE CLIENTES NUNCA SAO REMOVIDOS
 		try {
@@ -231,6 +230,7 @@ public class Server
 			WorkerData data = new WorkerData(this.workerID_counter, memory, threadWorkerInfo[threadID]);
 			this.threadWorkerInfo[threadID].addWorker(data);
 			this.workerID_counter ++;
+			System.out.println("New worker connection, ID: " + data.ID);
 			return data;
 		} finally {
 			// workerInfoLock.writeLock().unlock();
@@ -259,6 +259,7 @@ public class Server
 			
 			data.workerLock.writeLock().unlock(); // unlocked here since no other changes will be made and the push itself will block
 			inputBufferWorker.push(message);
+			System.out.println("Client " + message.getClient() + " message " + message.getMessage().getRequestN() + " returned from worker " + data.ID);
 
 		} catch (InterruptedException e) {
 			e.printStackTrace();

@@ -64,4 +64,12 @@ public class WtSErrorMsg implements WtSMsg {
         this.memUsed = mem;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("reqN: " + this.requestN);
+        sb.append(" mem: " + this.memUsed);
+        sb.append(" error: " + this.error);
+        return sb.toString();
+    }
 }

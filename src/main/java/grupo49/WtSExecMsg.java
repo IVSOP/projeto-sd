@@ -3,6 +3,7 @@ package grupo49;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 //Worker to server exec msg
 public class WtSExecMsg implements WtSMsg {
@@ -64,6 +65,21 @@ public class WtSExecMsg implements WtSMsg {
 
     private void setData(byte[] data) {
         this.data = data;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("reqN: " + this.requestN);
+        sb.append(" mem: " + this.memUsed);
+        String byteData = "";
+        try {
+            byteData = new String(this.data,"UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        sb.append(" data in stringFormat: " + byteData);
+        return sb.toString();
     }
 
 }

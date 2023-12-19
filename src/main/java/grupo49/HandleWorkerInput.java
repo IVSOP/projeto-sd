@@ -33,7 +33,7 @@ public class HandleWorkerInput implements Runnable {
 				WtSRegMsg regMsg = new WtSRegMsg();
 				regMsg.deserialize(in);
 				this.data = server.registerWorker(regMsg.getMemAvail());
-
+				System.out.println("New worker connection, ID: " + this.data.ID +" mem " + this.data.memory);
 				outThread = new Thread(new HandleWorkerOutput(out, this.data.outputBuffer));
 				outThread.start();
 
@@ -47,7 +47,7 @@ public class HandleWorkerInput implements Runnable {
 					switch (opcode) {
 
 						case 1: // se mensagem vinda do worker era de resultado de execução
-							ClientMessage<WtSExecMsg> workerExecMsg = new ClientMessage<WtSExecMsg>();
+							ClientMessage<WtSExecMsg> workerExecMsg = new ClientMessage<WtSExecMsg>(new WtSExecMsg());
 							workerExecMsg.deserialize(in);
 							StCMsg execMsg = 
 								new StCExecMsg(workerExecMsg.getMessage().getRequestN(),workerExecMsg.getMessage().getData());
@@ -59,7 +59,7 @@ public class HandleWorkerInput implements Runnable {
 
 						case 2: // se mensagem vinda de worker era de erro
 
-							ClientMessage<WtSErrorMsg> workerErrorMsg = new ClientMessage<WtSErrorMsg>();
+							ClientMessage<WtSErrorMsg> workerErrorMsg = new ClientMessage<WtSErrorMsg>(new WtSErrorMsg());
 							workerErrorMsg.deserialize(in);
 							StCMsg errorMsg = 
 								new StCErrorMsg(workerErrorMsg.getMessage().getRequestN(), workerErrorMsg.getMessage().getError());

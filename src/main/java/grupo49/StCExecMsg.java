@@ -60,8 +60,8 @@ public class StCExecMsg implements StCMsg {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(" reqN: " + this.requestN);
-        String byteData = "data..";
+        sb.append("reqN: " + this.requestN);
+        String byteData = "";
         try {
             byteData = new String(this.data,"UTF-8");
         } catch (UnsupportedEncodingException e) {

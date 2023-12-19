@@ -61,7 +61,6 @@ public class AnswerClientInput implements Runnable {
 						case 0: // register
 							CtSRegMsg authMsg = new CtSRegMsg();
 							authMsg.deserialize(in);
-							System.out.println(authMsg.toString());
 							clientExists = server.clientExists(authMsg.getName());
 							if (clientExists) {
 								System.out.println( "Received Client register: name already exists");
@@ -78,7 +77,6 @@ public class AnswerClientInput implements Runnable {
 						case 1: //login
 							CtSLoginMsg loginMsg = new CtSLoginMsg();
 							loginMsg.deserialize(in);
-							System.out.println(loginMsg.toString());
 							clientExists = server.clientExists(loginMsg.getName());
 							if (!clientExists) { // se login correu mal
 								System.out.println("Received Client login: name doesn't exist");
@@ -137,7 +135,7 @@ public class AnswerClientInput implements Runnable {
 						case 3: 
 							baseMsg = new CtSStatusMsg();
 							baseMsg.deserialize(in);
-							System.out.println(baseMsg.toString()); // debug
+							System.out.println("Received from client\n" + baseMsg.toString()); // debug
 
 							try {
 								OcupationData ocupation = server.getOcupationData();

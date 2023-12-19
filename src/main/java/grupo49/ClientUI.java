@@ -11,11 +11,11 @@ import java.io.IOException;
 
 public class ClientUI {
 	private static Scanner scanner = new Scanner(System.in);
-
 	public static void main(String[] args) throws UnknownHostException, InterruptedException {
 
 		//register/login loop
 		Client client = authenticateClient();
+		String outputPath = getOutputPath();
 
 		client.startInput();
 
@@ -25,7 +25,7 @@ public class ClientUI {
 				while (true) {
 					message = client.getNextAnswer();
 					System.out.println("Message " + message.getRequestN() + " arrived, writing to file");
-					writeToFile(message);
+					writeToFile(message, outputPath);
 				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();
@@ -35,8 +35,8 @@ public class ClientUI {
 
 		// loop para permitir enviar pedidos
 		String input;
-		System.out.println("Actions available:\n1. Execution request\n2. Service status\n");
 		while (true) {
+			System.out.println("Actions available:\n1. Execution request\n2. Service status\n");
 			input = askForInput("Input:");
 			if (input.equals("1")) { // Pedido de execução
 				// pedir nome do ficheiro de input
@@ -44,6 +44,7 @@ public class ClientUI {
 				String filePath = askForInput("Enter the file path for job input: ");
 				int memNeeded = readMemFromFile(filePath);
 				byte[] requestMsg = readInputBytesFromFile(filePath);
+				System.out.println("Sending exec msg from path:" + filePath + " mem: " + memNeeded);
 				client.sendExecMsg(memNeeded,requestMsg);
 			}
 			else if (input.equals("2")) { // Pedido de estado
@@ -114,12 +115,14 @@ public class ClientUI {
 		return client;
 	}
 
+	private static String getOutputPath() {
+		return askForInput("Output file for exec msgs: ");
+	}
+
 	private static int readMemFromFile(String filePath) {
         int memNeeded = 0;
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
-            memNeeded = (int) reader.lines()
-                .mapToInt(String::length)
-                .sum();
+            memNeeded = Integer.parseInt(reader.readLine());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -129,13 +132,14 @@ public class ClientUI {
 	private static byte[] readInputBytesFromFile(String filePath) {
         byte[] fileBytes = null;
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
-			// Skip 1ª linha
-			reader.readLine();
+			// // Skip 1ª linha // já foi dado quando se chama readMem
+			// reader.readLine();
             StringBuilder content = new StringBuilder();
             String line;
             while ((line = reader.readLine()) != null) {
                 content.append(line).append(System.lineSeparator());
             }
+			//System.out.println("Read from file " + line);
             fileBytes = content.toString().getBytes();
         } catch (IOException e) {
             e.printStackTrace();
@@ -143,8 +147,9 @@ public class ClientUI {
         return fileBytes;
     }
 
-	private static void writeToFile(StCMsg message) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter("output.txt", true))) {
+	private static void writeToFile(StCMsg message, String outputPath) {
+		// qual é suposto ser o ficheiro de output?? muda para cada request, muda para cada cliente?
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputPath, true))) {
             writer.write(message.toString());
             writer.newLine();
         } catch (IOException e) {

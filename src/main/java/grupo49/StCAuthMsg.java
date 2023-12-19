@@ -55,8 +55,8 @@ public class StCAuthMsg {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("successfull: " + this.success);
-        sb.append("info: +" + this.info);
+        sb.append(" successfull: " + this.success);
+        sb.append(" info: +" + this.info);
         return sb.toString();
     }
 }
