@@ -70,7 +70,7 @@ public class Worker
 			while (true) {
 				try {
 					message.deserialize(in);
-					System.out.println("Got new task: " + message.toString());
+					// System.out.println("Got new task: " + message.toString());
 					System.out.println("Got task " + message.getMessage().getRequestN() + " from client " + message.getClient());
 					inputBuffer.push(message);
 				} catch (Exception e) {
