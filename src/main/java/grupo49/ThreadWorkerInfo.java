@@ -84,6 +84,9 @@ public class ThreadWorkerInfo {
 	public void dispatchToBestWorker(ClientMessage<StWMsg> outputMessage, int memory) {
 		try {
 			arrayLock.lock();
+			if (arr.size() == 0) {
+				System.out.println("This scheduler has no workers, for now this case is not considered, job will go nowhere");
+			}
 			this.arr.sort((a, b) -> a.jobs - b.jobs);
 			for (WorkerData data : arr) {
 				// agora ja usamos locks individuais, temos de ter a certeza da memoria disponivel

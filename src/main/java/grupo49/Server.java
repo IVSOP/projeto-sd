@@ -157,7 +157,7 @@ public class Server
 
 	// push message into global input buffer for clients
 	// WILL BLOCK if the client has exceeded number of jobs it can have
-	// ClientData is passed for efficieny, avoiding a loopkup in the map of all clients
+	// ClientData is passed for efficiency, avoiding a loopkup in the map of all clients
 	public void pushInputBufferClient(ClientMessage<CtSMsg> message, ClientData clientInfo) {
 		try {
 			clientInfo.serverPushLock.lock();
