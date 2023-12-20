@@ -71,7 +71,6 @@ public class Worker
 			while (true) {
 				try {
 					message.deserialize(in);
-<<<<<<< Updated upstream
 					// System.out.println("Got new task: " + message.toString());
 					System.out.println("Got task " + message.getMessage().getRequestN() + " from client " + message.getClient());
 					inputBuffer.push(message);
@@ -80,16 +79,6 @@ public class Worker
 					System.exit(1);
 					// e.printStackTrace();
 				} catch (InterruptedException e) {
-=======
-					//System.out.println("Got new task: " + message.toString());
-					System.out.println("Got task " + message.getMessage().getRequestN() + " from client " + message.getClient());
-					inputBuffer.push(message);
-				} catch (EOFException e) {
-					System.out.println("Server disconencted");
-					System.exit(1);
-					// o que fazer aqui
-				} catch (Exception e) {
->>>>>>> Stashed changes
 					e.printStackTrace();
 					System.exit(2);
 				}

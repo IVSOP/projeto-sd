@@ -86,6 +86,7 @@ public class ThreadWorkerInfo {
 			arrayLock.lock();
 			System.out.println("got here");
 			this.arr.sort((a, b) -> Integer.compare(a.jobs,b.jobs));
+			System.out.println("After sort");
 			for (WorkerData data : arr) {
 				// agora ja usamos locks individuais, temos de ter a certeza da memoria disponivel
 				// nao usamos locks de read porque podemos ter de alterar o valor, a performance nao deve ser muito diferente, ia ser confuso usar read e write logo a seguir, nem sei como funcemina
