@@ -7,21 +7,17 @@
 #include <string.h>
 #include <time.h>
 
-void spam_clients(int pipe_array[][2], int total_clients) {
+void spam_clients(int pipe_array[][2], int total_clients, int j) {
 	// int r = rand();
 	int i;
+	const char message[] = "2\n";
+	const char file[] = "1\ntests/sample_text.txt\n";
 	for (i = 0; i < total_clients; i++) {
-		const char file[] = "1\ntests/sample_text.txt\n";
-		write(pipe_array[i][1], file, strlen(file));
-	}
-}
-
-void spam_status_clients(int pipe_array[][2], int total_clients) {
-	// int r = rand();
-	int i;
-	for (i = 0; i < total_clients; i++) {
-		const char opt[] = "2\n";
-		write(pipe_array[i][1], opt, strlen(opt));
+		if (i == j) {
+			write(pipe_array[i][1], message, strlen(message));
+		} else {
+			write(pipe_array[i][1], file, strlen(file));
+		}
 	}
 }
 
@@ -33,15 +29,16 @@ int main (int argc, char *argv[]) {
 	printf("Init for %d clients\n", total_clients);
 
 	int pipe_array[total_clients][2]; // array of pipes
+	int pid_array[total_clients];
 
-	int i;
+	int i; int pid;
 	for (i = 0; i < total_clients; i++) {
 		if (pipe(pipe_array[i]) != 0) {
 			perror("Error making pipe");
 			exit(1);
 		}
 
-		if (fork() == 0) {
+		if ((pid = fork()) == 0) {
 			close(pipe_array[i][1]);
 
 			close(STDOUT_FILENO);
@@ -61,6 +58,8 @@ int main (int argc, char *argv[]) {
 
 			_exit(1);
 		} else {
+			pid_array[i] = pid;
+
 			close(pipe_array[i][0]);
 
 			char message[64];
@@ -71,7 +70,7 @@ int main (int argc, char *argv[]) {
 		}
 	}
 
-	printf("All clients registered.\nEnter y to begin turbo pro max spam\n");
+	printf("Please wait for all clients to register.\nEnter y to begin turbo pro max spam\n");
 	char confirmation;
 	scanf("%c", &confirmation);
 
@@ -81,15 +80,22 @@ int main (int argc, char *argv[]) {
 	// memory is 50 per request
 
 	if (confirmation == 'y') {
-		for (i = 0; i < 9; i++) {
-			spam_clients(pipe_array, total_clients);
+		for (i = 0; i < 10; i++) {
+			spam_clients(pipe_array, total_clients, i);
 		}
-		spam_status_clients(pipe_array, total_clients);
 	}
 
 	printf("Spam finished, enter anything to exit\n");
 	char idk;
+	scanf("%c", &idk); // newline
 	scanf("%c", &idk);
-	printf("%c\n", idk); // para evitar otimizar isto
+	printf("entered %c\n", idk); // para evitar otimizar isto
+	for (i = 0; i < total_clients; i++) {
+		close(pipe_array[i][1]);
+	}
+	printf("Waiting for child processes to die\n");
+	for (i = 0; i < total_clients; i++) {
+		waitpid(pid, (void *)NULL, 0);
+	}
 	return 0;
 }

@@ -6,7 +6,7 @@ then
 	exit 1
 fi
 
-./build.sh
+# ./build.sh
 
 gcc -O2 tests/*.c -o tests/testexec
 # assumes server and workers already exist
