@@ -49,6 +49,43 @@
   <build>
     <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
       <plugins>
+	    <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <!-- <version>1.7.0</version> -->
+            <executions>
+				<execution>
+<!-- ClientUI -->
+					<id>client</id>
+					<goals>
+                        <goal>java</goal>
+                    </goals>
+                    <configuration>
+                        <mainClass>grupo49.ClientUI</mainClass>
+                    </configuration>
+				</execution>
+                <execution>
+<!-- Server -->
+                    <id>server</id>
+                    <goals>
+                        <goal>java</goal>
+                    </goals>
+                    <configuration>
+                        <mainClass>grupo49.Server</mainClass>
+                    </configuration>
+                </execution>
+				<execution>
+<!-- Worker -->
+					<id>worker</id>
+                    <goals>
+                        <goal>java</goal>
+                    </goals>
+                    <configuration>
+                        <mainClass>grupo49.Worker</mainClass>
+                    </configuration>
+				</execution>
+            </executions>
+        </plugin>
         <!-- clean lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#clean_Lifecycle -->
         <plugin>
           <artifactId>maven-clean-plugin</artifactId>
