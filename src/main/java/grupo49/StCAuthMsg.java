@@ -47,6 +47,11 @@ public class StCAuthMsg implements StCMsg {
     public int getRequestN() {
         return -1;
     }
+
+    public byte[] getResultInBytes() {
+        return null;
+    }
+
     private void setSuccess(boolean success) {
         this.success = success;
     }

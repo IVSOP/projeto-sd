@@ -16,6 +16,7 @@ interface CtSMsg extends IMessage {
 }
 
 interface StCMsg extends IMessage {
+    public byte[] getResultInBytes();
 };
 
 interface WtSMsg extends IMessage {

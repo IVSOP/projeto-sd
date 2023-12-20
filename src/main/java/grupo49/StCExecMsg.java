@@ -49,6 +49,10 @@ public class StCExecMsg implements StCMsg {
         return this.data;
     }
 
+    public byte[] getResultInBytes() {
+        return this.data;
+    }
+
     private void setRequestN(int requestN) {
         this.requestN = requestN;
     }
@@ -60,28 +64,16 @@ public class StCExecMsg implements StCMsg {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
+        sb.append("reqN: " + this.requestN);
         String byteData = "";
         try {
             byteData = new String(this.data,"UTF-8");
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
-        sb.append(byteData);
+        sb.append(" data in stringFormat: " + byteData);
         return sb.toString();
     }
-
-    public String toString2() {
-    StringBuilder sb = new StringBuilder();
-    sb.append("reqN: " + this.requestN);
-    String byteData = "";
-    try {
-        byteData = new String(this.data,"UTF-8");
-    } catch (UnsupportedEncodingException e) {
-        e.printStackTrace();
-    }
-    sb.append(" data in stringFormat: " + byteData);
-    return sb.toString();
-}
 }
 
 

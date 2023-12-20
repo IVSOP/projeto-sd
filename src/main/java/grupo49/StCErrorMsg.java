@@ -46,6 +46,12 @@ public class StCErrorMsg implements StCMsg {
         return this.error;
     }
 
+    public byte[] getResultInBytes() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(" error: +" + this.error);
+        return sb.toString().getBytes();
+    }
+
     private void setRequestN(int requestN) {
         this.requestN = requestN;
     }
@@ -56,12 +62,6 @@ public class StCErrorMsg implements StCMsg {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(" error: +" + this.error);
-        return sb.toString();
-    }
-
-    public String toString2() {
     StringBuilder sb = new StringBuilder();
     sb.append("reqN: " + this.requestN);
     sb.append(" error: +" + this.error);

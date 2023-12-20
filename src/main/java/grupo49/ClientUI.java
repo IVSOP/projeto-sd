@@ -4,8 +4,10 @@ import java.net.UnknownHostException;
 import java.util.Scanner;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -161,8 +163,8 @@ public class ClientUI {
 	private static void writeToFile(Client client, StCMsg message, String outputPath) {
 		// qual é suposto ser o ficheiro de output?? muda para cada request, muda para cada cliente?
         String outputFile = outputPath +  client.getName() + "-" + message.getRequestN() + ".txt";
-		try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true))) {
-            writer.write(message.toString());
+		try (BufferedOutputStream writer = new BufferedOutputStream(new FileOutputStream(outputFile))) {
+            writer.write(message.getResultInBytes());
             //writer.newLine();
         } catch (IOException e) {
             e.printStackTrace();

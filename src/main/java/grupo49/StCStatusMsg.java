@@ -51,6 +51,12 @@ public class StCStatusMsg implements StCMsg {
         return this.pending;
     }
 
+    public byte[] getResultInBytes() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(" mem: " + this.mem);
+        sb.append(" pending: " + this.pending);
+        return sb.toString().getBytes();
+    }
 
     private void setRequestN(int requestN) {
         this.requestN = requestN;
@@ -66,13 +72,6 @@ public class StCStatusMsg implements StCMsg {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(" mem: " + this.mem);
-        sb.append(" pending: " + this.pending);
-        return sb.toString();
-    }
-
-    public String toString2() {
         StringBuilder sb = new StringBuilder();
         sb.append("reqN: " + this.requestN);
         sb.append(" mem: " + this.mem);
