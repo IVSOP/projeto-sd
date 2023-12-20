@@ -20,7 +20,7 @@ public class HandleWorkerOutput implements Runnable {
 				msg.serialize(out);
 			}
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			// do nothing, got terminated from parent thread, just exit
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

@@ -75,17 +75,17 @@ public class HandleWorkerInput implements Runnable {
 
 			} catch (EOFException e) { // chamada quando socket fecha do outro lado e temos erro a dar read
 				// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! por agora nao ha controlo sobre isto, se worker morrer vai haver muita coisa a correr mal
+				System.out.println("Worker disconected, not safe, server will crash");
+				in.close();
 				in.close();
 				out.close();
 				socket.close();
-
-				// kill output thread
-				outThread.interrupt();
+				throw new IOException(e); // mesmo que corra bem damos throw, assim fecha-se tudo em baixo
 
 				// server.removeWorker(...);
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+			outThread.interrupt();
 		}
 	}
 }
