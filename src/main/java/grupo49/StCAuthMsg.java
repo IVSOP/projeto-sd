@@ -9,7 +9,7 @@ import java.io.IOException;
 //Server to client error occured msg
 // this message type is also used from worker to server, since message is the same
 
-public class StCAuthMsg {
+public class StCAuthMsg implements StCMsg {
     private static final byte opcode = 3; // value to distinguish message server side
     private boolean success; // if authentication was or not successful
     private String info; // error info
@@ -44,6 +44,9 @@ public class StCAuthMsg {
         return this.info;
     }
 
+    public int getRequestN() {
+        return -1;
+    }
     private void setSuccess(boolean success) {
         this.success = success;
     }

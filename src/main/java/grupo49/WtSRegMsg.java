@@ -29,4 +29,8 @@ public class WtSRegMsg implements WtSMsg {
     public int getMemAvail() {
         return this.memAvailable;
     }
+
+    public int getRequestN() {
+        return -1;
+    }
 }

@@ -8,6 +8,7 @@ import java.io.IOException;
  interface IMessage {
     public void serialize(DataOutputStream dos) throws IOException;
     public void deserialize(DataInputStream dis) throws IOException;
+    public int getRequestN();
 }
 
 interface CtSMsg extends IMessage {
@@ -15,9 +16,10 @@ interface CtSMsg extends IMessage {
 }
 
 interface StCMsg extends IMessage {
-    public int getRequestN();
 };
-interface WtSMsg extends IMessage {};
+
+interface WtSMsg extends IMessage {
+};
+
 interface StWMsg extends IMessage {
-	public int getRequestN();
 }; // na prática só existe StWExecMsg, mas permite expansão no futuro

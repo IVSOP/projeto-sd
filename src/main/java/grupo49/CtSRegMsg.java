@@ -42,6 +42,10 @@ public class CtSRegMsg implements CtSMsg {
         return this.password;
     }
 
+    public int getRequestN() {
+        return -1;
+    }
+
     private void setName(String name) {
         this.name = name;
     }
