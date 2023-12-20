@@ -84,14 +84,16 @@ public class ThreadWorkerInfo {
 	public void dispatchToBestWorker(ClientMessage<StWMsg> outputMessage, int memory) {
 		try {
 			arrayLock.lock();
-			this.arr.sort((a, b) -> a.jobs - b.jobs);
+			System.out.println("got here");
+			this.arr.sort((a, b) -> Integer.compare(a.jobs,b.jobs));
 			for (WorkerData data : arr) {
 				// agora ja usamos locks individuais, temos de ter a certeza da memoria disponivel
 				// nao usamos locks de read porque podemos ter de alterar o valor, a performance nao deve ser muito diferente, ia ser confuso usar read e write logo a seguir, nem sei como funcemina
+				System.out.println("got here1");
 				try {
 					data.workerLock.writeLock().lock();
 					// nao usei changeMemoryAndJobs(), assim aproveito ja o facto de ter a lock feita (muito confuso mas prontos)
-
+					System.out.println("got here2");
 					if (data.memory >= memory) { // >= ou so >??
 						// worker has been chosen
 						data.memory -= memory;
@@ -100,6 +102,7 @@ public class ThreadWorkerInfo {
 							// isto podia ser feito em qualquer sitio acho eu, ficou aqui
 							try {
 								memoryAndJobsLock.writeLock().lock();
+								System.out.println("got here3");
 								totalMemoryRemaining -= memory;
 								totalPendingJobs ++;
 							} finally {
@@ -111,6 +114,7 @@ public class ThreadWorkerInfo {
 						// podemos ter azar em que escolher outro daria 'unlock' da sua espera mais rapido, mas nao e possivel prever isso, so se fizesse um select() extremament manhoso ou assim
 						data.outputBuffer.push(outputMessage);
 						System.out.println("Client " + outputMessage.getClient() + " message " + ((StWExecMsg) outputMessage.getMessage()).getRequestN() + " gone to worker " + data.ID);
+						System.out.println("Worker jobs: " + data.jobs + ", memory: " + data.memory);
 						break;
 					}
 				} finally {

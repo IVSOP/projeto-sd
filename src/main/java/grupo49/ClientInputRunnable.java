@@ -1,6 +1,7 @@
 package grupo49;
 
 import java.io.DataInputStream;
+import java.io.IOException;
 
 // le da socket, mete no input buffer
 public class ClientInputRunnable implements Runnable {
@@ -35,8 +36,12 @@ public class ClientInputRunnable implements Runnable {
 				this.inputBuffer.push(message);
 			}
             
-		} catch (Exception e) {
+		} catch (IOException e) {
+			System.out.println("Is server closed? Shutting down");
+			System.exit(1);
+		} catch (InterruptedException e) {
 			e.printStackTrace();
+			System.exit(2);
 		}
 	}
 }

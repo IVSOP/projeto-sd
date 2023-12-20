@@ -2,6 +2,7 @@ package grupo49;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -70,6 +71,7 @@ public class Worker
 			while (true) {
 				try {
 					message.deserialize(in);
+<<<<<<< Updated upstream
 					// System.out.println("Got new task: " + message.toString());
 					System.out.println("Got task " + message.getMessage().getRequestN() + " from client " + message.getClient());
 					inputBuffer.push(message);
@@ -78,14 +80,23 @@ public class Worker
 					System.exit(1);
 					// e.printStackTrace();
 				} catch (InterruptedException e) {
-					e.printStackTrace();
+=======
+					//System.out.println("Got new task: " + message.toString());
+					System.out.println("Got task " + message.getMessage().getRequestN() + " from client " + message.getClient());
+					inputBuffer.push(message);
+				} catch (EOFException e) {
+					System.out.println("Server disconencted");
 					System.exit(1);
+					// o que fazer aqui
+				} catch (Exception e) {
+>>>>>>> Stashed changes
+					e.printStackTrace();
+					System.exit(2);
 				}
 			}
 	}
 
 	// main receives server IP and local IP. memory is optional
-	// NOT IMPLEMENTED
     public static void main( String[] args )
     {
 		Worker worker = WorkerUI.setupWorker();
