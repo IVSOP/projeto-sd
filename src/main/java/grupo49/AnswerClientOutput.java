@@ -25,7 +25,7 @@ public class AnswerClientOutput implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			// do nothing, got terminated from parent thread, just exit
         } finally {
 
 		}

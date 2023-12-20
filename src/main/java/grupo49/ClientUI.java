@@ -74,9 +74,9 @@ public class ClientUI {
 		try {
 			client = new Client(serverAddress, username, password);
 			//client = new Client(serverAddress, localAddress, username, password);
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.exit(-1);
+		} catch (IOException e) {
+			System.out.println("Bad host, exiting");
+			System.exit(1);
 		}
 
 		//Escolha entre register e login

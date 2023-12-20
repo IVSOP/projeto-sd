@@ -152,17 +152,20 @@ public class AnswerClientInput implements Runnable {
 				}
 
 			} catch (EOFException e) { // chamada quando socket fecha do outro lado e temos erro a dar read
+				System.out.println("Client " + data.ID + " disconnected, closing socket");
+				// outThread.interrupt();
 				in.close();
 				out.close();
 				socket.close();
+				throw new IOException(e); // mesmo que corra bem damos throw, assim fecha-se tudo em baixo
 
-				// kill output thread
-				outThread.interrupt();
-
-				data.removeOutputBuffer();
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+			// e.printStackTrace();
+			// kill output thread
+			outThread.interrupt();
+
+			data.removeOutputBuffer();
 		}
     }
 }

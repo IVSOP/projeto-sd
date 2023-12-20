@@ -73,9 +73,13 @@ public class Worker
 					// System.out.println("Got new task: " + message.toString());
 					System.out.println("Got task " + message.getMessage().getRequestN() + " from client " + message.getClient());
 					inputBuffer.push(message);
-				} catch (Exception e) {
+				} catch (IOException e) {
+					System.out.println("Did server die? Exiting");
+					System.exit(1);
+					// e.printStackTrace();
+				} catch (InterruptedException e) {
 					e.printStackTrace();
-					// o que fazer aqui
+					System.exit(1);
 				}
 			}
 	}
