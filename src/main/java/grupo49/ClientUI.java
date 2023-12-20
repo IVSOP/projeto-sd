@@ -25,7 +25,7 @@ public class ClientUI {
 				while (true) {
 					message = client.getNextAnswer();
 					System.out.println("Message " + message.getRequestN() + " arrived, writing to file");
-					writeToFile(message, outputPath);
+					writeToFile(client, message, outputPath);
 				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();
@@ -116,7 +116,7 @@ public class ClientUI {
 	}
 
 	private static String getOutputPath() {
-		String path = askForInput("Output file for exec msgs: ");
+		String path = askForInput("Output folder for exec msgs: ");
 		if (!path.endsWith("/")) {
 			path += "/";
 		}
@@ -151,9 +151,9 @@ public class ClientUI {
         return fileBytes;
     }
 
-	private static void writeToFile(StCMsg message, String outputPath) {
+	private static void writeToFile(Client client, StCMsg message, String outputPath) {
 		// qual é suposto ser o ficheiro de output?? muda para cada request, muda para cada cliente?
-        String outputFile = outputPath + message.getRequestN() + ".txt";
+        String outputFile = outputPath +  client.getName() + "-" + message.getRequestN() + ".txt";
 		try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true))) {
             writer.write(message.toString());
             //writer.newLine();

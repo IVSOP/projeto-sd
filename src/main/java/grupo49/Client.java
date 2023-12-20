@@ -119,6 +119,10 @@ public class Client
 		socket.close();
 	}
 
+	public String getName() {
+		return this.name;
+	}
+
 	// main receives server IP and local IP. in the future add info to automate sending work?
 	// NOT IMPLEMENTED
 	// public static void main( String[] args )
