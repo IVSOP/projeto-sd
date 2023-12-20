@@ -69,6 +69,12 @@ public class StWExecMsg implements StWMsg {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(" reqN: " + this.requestN);
+        return sb.toString();
+    }
+
+    public String toString2() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(" reqN: " + this.requestN);
         String byteData = "data..";
         try {
             byteData = new String(this.data,"UTF-8");

@@ -2,7 +2,8 @@ package grupo49;
 
 import java.net.UnknownHostException;
 import java.util.Scanner;
-
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileReader;
@@ -37,7 +38,7 @@ public class ClientUI {
 		String input;
 		while (true) {
 			System.out.println("Actions available:\n1. Execution request\n2. Service status\n");
-			input = askForInput("Input:");
+			input = askForInput("Input:\n");
 			if (input.equals("1")) { // Pedido de execução
 				// pedir nome do ficheiro de input
 				// se for para dar submit e buffer de output estiver cheio, vai bloquear
@@ -119,6 +120,12 @@ public class ClientUI {
 		String path = askForInput("Output folder for exec msgs: ");
 		if (!path.endsWith("/")) {
 			path += "/";
+		}
+		try {
+			Files.createDirectories(Paths.get(path));
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.exit(1);
 		}
 		return path;
 	}

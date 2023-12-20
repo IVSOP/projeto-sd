@@ -2,6 +2,7 @@ package grupo49;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -79,13 +80,12 @@ public class Worker
 					// e.printStackTrace();
 				} catch (InterruptedException e) {
 					e.printStackTrace();
-					System.exit(1);
+					System.exit(2);
 				}
 			}
 	}
 
 	// main receives server IP and local IP. memory is optional
-	// NOT IMPLEMENTED
     public static void main( String[] args )
     {
 		Worker worker = WorkerUI.setupWorker();
