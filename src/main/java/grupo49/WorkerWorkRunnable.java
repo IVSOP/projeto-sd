@@ -37,10 +37,12 @@ public class WorkerWorkRunnable implements Runnable {
 				} catch (JobFunctionException e) { //se resultado correu mal
 					//System.err.println("job failed: code="+e.getCode()+" message="+e.getMessage());
 					innerMsg = new WtSErrorMsg(msg.getRequestN(), msg.getMemUsed(), "job failed: code="+e.getCode()+" message="+e.getMessage());
+
 				}
 
 				ClientMessage<WtSMsg> finalMsg = new ClientMessage<>(inputMsg.getClient(), innerMsg);
-				System.out.println("Processed task: " + finalMsg.toString());
+				// System.out.println("Processed task: " + finalMsg.toString());
+				System.out.println("Processed task number " + msg.getRequestN() + " for client " + finalMsg.getClient());
 				this.outputBuffer.push(finalMsg);
 			}
 		} catch (InterruptedException e) {

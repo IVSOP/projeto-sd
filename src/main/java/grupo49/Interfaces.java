@@ -18,4 +18,6 @@ interface StCMsg extends IMessage {
     public int getRequestN();
 };
 interface WtSMsg extends IMessage {};
-interface StWMsg extends IMessage {}; // na prática só existe StWExecMsg, mas permite expansão no futuro
+interface StWMsg extends IMessage {
+	public int getRequestN();
+}; // na prática só existe StWExecMsg, mas permite expansão no futuro
