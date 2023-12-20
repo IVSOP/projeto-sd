@@ -17,7 +17,7 @@ public class HandleWorkerOutput implements Runnable {
 		try {
 			while(true) {
 				ClientMessage<StWMsg> msg = outputBuffer.pop();
-				System.out.println("Pushing msg " + msg.getMessage().getRequestN() + "from worker outputBuffer to worker");
+				// System.out.println("Pushing msg " + msg.getMessage().getRequestN() + "from worker outputBuffer to worker");
 				msg.serialize(out);
 			}
 		} catch (InterruptedException e) {

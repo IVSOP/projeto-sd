@@ -69,7 +69,7 @@ public class HandleWorkerInput implements Runnable {
 							
 							break;
 					}
-					System.out.println("Pushing msg " + msgToPush.getMessage().getRequestN() + "from client " + msgToPush.getClient() + "to worker input buffer");
+					// System.out.println("Request " + msgToPush.getMessage().getRequestN() + " from client " + msgToPush.getClient() + "received from worker " + data.ID);
 					server.pushInputBufferWorker(msgToPush, this.data, memUsed);
 				}
 
@@ -82,10 +82,10 @@ public class HandleWorkerInput implements Runnable {
 				socket.close();
 				throw new IOException(e); // mesmo que corra bem damos throw, assim fecha-se tudo em baixo
 
-				// server.removeWorker(...);
 			}
 		} catch (IOException e) {
 			outThread.interrupt();
+			// server.removeWorker(...);
 		}
 	}
 }

@@ -112,8 +112,8 @@ public class ThreadWorkerInfo {
 						// mas como este e um dos melhores workers e incrementamos aqui o jobs, significa que em qualquer outro woker seria necessario esperar
 						// podemos ter azar em que escolher outro daria 'unlock' da sua espera mais rapido, mas nao e possivel prever isso, so se fizesse um select() extremament manhoso ou assim
 						data.outputBuffer.push(outputMessage);
-						System.out.println("Client " + outputMessage.getClient() + " message " + ((StWExecMsg) outputMessage.getMessage()).getRequestN() + " dispatched to worker " + data.ID);
-						System.out.println("Worker now has jobs: " + data.jobs + ", memory: " + data.memory);
+						// System.out.println("Client " + outputMessage.getClient() + " message " + ((StWExecMsg) outputMessage.getMessage()).getRequestN() + " dispatched to worker " + data.ID);
+						// System.out.println("Worker now has jobs: " + data.jobs + ", memory: " + data.memory);
 						break;
 					}
 				} finally {

@@ -69,9 +69,10 @@ public class Client
 	}
 
 	private void sendRequest(CtSMsg msg) throws InterruptedException {
-	requestID++;
-	msg.setRequestN(requestID);
-	outputBuffer.push(msg);
+		requestID++;
+		System.out.println("sending request for task " + requestID);
+		msg.setRequestN(requestID);
+		outputBuffer.push(msg);
 	}
 
 	public boolean registerClient() throws IOException, InterruptedException{

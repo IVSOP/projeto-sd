@@ -138,7 +138,7 @@ public class AnswerClientInput implements Runnable {
 							System.out.println("Client " + data.ID + " asking for status");
 							baseMsg = new CtSStatusMsg();
 							baseMsg.deserialize(in);
-							System.out.println("Received from client\n" + baseMsg.toString()); // debug
+							// System.out.println("Received from client\n" + baseMsg.toString()); // debug
 
 							try {
 								OcupationData ocupation = server.getOcupationData();

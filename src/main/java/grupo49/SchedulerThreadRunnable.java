@@ -25,7 +25,7 @@ public class SchedulerThreadRunnable implements Runnable {
 
 				StWMsg outMsg = new StWExecMsg(execMsg.getRequestN(), execMsg.getMem(), execMsg.getData());
 				outputMessage = new ClientMessage<StWMsg>(inputMessage.getClient(),outMsg);
-				System.out.println("Dispatching to workers message" + outputMessage.toString());
+				// System.out.println("Dispatching to workers request " + inputMessage.getMessage().getRequestN() + " from client " + inputMessage.getClient());
 				workers.dispatchToBestWorker(outputMessage, execMsg.getMem());
 				System.out.println("Scheduler: dispatched request " + inputMessage.getMessage().getRequestN() + " from client " + inputMessage.getClient());
 				

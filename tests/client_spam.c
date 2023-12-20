@@ -93,6 +93,7 @@ int main (int argc, char *argv[]) {
 	for (i = 0; i < total_clients; i++) {
 		close(pipe_array[i][1]);
 	}
+	printf("pipes closed\n");
 	printf("Waiting for child processes to die\n");
 	for (i = 0; i < total_clients; i++) {
 		waitpid(pid, (void *)NULL, 0);
