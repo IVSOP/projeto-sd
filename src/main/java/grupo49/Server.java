@@ -249,13 +249,12 @@ public class Server
 			// nao vou usar isto porque ja temos a lock, podemos alterar diretamente
 			// data.addMemoryAndJobs(message.getMemory(), - 1);
 
-			//como 
 			data.memory += memUsed;
 			data.jobs --;
 
 			// ja que mudamos no worker individual, aproveita-se tbm para mudar o acumulador nas threads
 			// nao sei se faz diferenca ser aqui ou fazer um unlock depois, nao pensei muito bem nisto mas vai dar ao mesmo acho eu
-			data.ownerThread.addMemoryAndJobs(new OcupationData(- memUsed, -1));
+			data.ownerThread.addMemoryAndJobs(new OcupationData(memUsed, -1));
 			
 			data.workerLock.writeLock().unlock(); // unlocked here since no other changes will be made and the push itself will block
 			inputBufferWorker.push(message.clone());
