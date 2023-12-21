@@ -22,6 +22,12 @@ public class WtSErrorMsg implements WtSMsg {
         this.error = error;
     }
 
+    public WtSErrorMsg(WtSErrorMsg msg) {
+        this.requestN = msg.requestN;
+        this.memUsed = msg.memUsed;
+        this.error = msg.error;
+    }
+
     //serialize sends msgType before data, for server msg distinction!!
     public void serialize(DataOutputStream dos) throws IOException{
         dos.writeByte(opcode);
@@ -71,5 +77,10 @@ public class WtSErrorMsg implements WtSMsg {
         sb.append(" mem: " + this.memUsed);
         sb.append(" error: " + this.error);
         return sb.toString();
+    }
+
+    @Override
+    public WtSMsg clone() {
+        return new WtSErrorMsg(this);
     }
 }

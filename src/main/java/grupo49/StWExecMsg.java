@@ -22,6 +22,12 @@ public class StWExecMsg implements StWMsg {
         this.data = data;
     }
 
+    public StWExecMsg(StWExecMsg msg) {
+        this.requestN = msg.requestN;
+        this.memUsed = msg.memUsed;
+        this.data = msg.data;
+    }
+
     public void serialize(DataOutputStream dos) throws IOException{
         //n escreve opcode 
         dos.writeInt(this.requestN);
@@ -83,6 +89,11 @@ public class StWExecMsg implements StWMsg {
         }
         sb.append(" data in stringFormat: " + byteData);
         return sb.toString();
+    }
+
+    @Override
+    public StWMsg clone() {
+        return new StWExecMsg(this);
     }
 
 }

@@ -23,6 +23,12 @@ public class CtSExecMsg implements CtSMsg {
         this.data = bArray; //bArray.clone()?
     }
 
+    public CtSExecMsg(CtSExecMsg msg) {
+        this.requestN = msg.requestN;
+        this.mem = msg.mem;
+        this.data = msg.data;
+    }
+
     //serialize sends msgType before data, for server msg distinction!!
     public void serialize(DataOutputStream dos) throws IOException{
         dos.writeByte(opcode);
@@ -81,5 +87,10 @@ public class CtSExecMsg implements CtSMsg {
         }
         sb.append(" data in stringFormat: " + byteData);
         return sb.toString();
+    }
+
+    @Override
+    public CtSMsg clone() {
+        return new CtSExecMsg(this);
     }
 }

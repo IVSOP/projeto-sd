@@ -22,6 +22,11 @@ public class StCExecMsg implements StCMsg {
         this.data = data;
     }
 
+    public StCExecMsg(StCExecMsg msg) {
+        this.requestN = msg.requestN;
+        this.data = msg.data;
+    }
+
     //serialize sends msgType before data, for server msg distinction!!
     public void serialize(DataOutputStream dos) throws IOException{
         dos.writeByte(opcode);
@@ -73,6 +78,11 @@ public class StCExecMsg implements StCMsg {
         }
         sb.append(" data in stringFormat: " + byteData);
         return sb.toString();
+    }
+
+    @Override
+    public StCMsg clone() {
+        return new StCExecMsg(this);
     }
 }
 

@@ -73,7 +73,7 @@ public class Worker
 					message.deserialize(in);
 					// System.out.println("Got new task: " + message.toString());
 					System.out.println("Got task " + message.getMessage().getRequestN() + " from client " + message.getClient());
-					inputBuffer.push(message);
+					inputBuffer.push(message.clone());
 				} catch (IOException e) {
 					System.out.println("Did server die? Exiting");
 					System.exit(1);

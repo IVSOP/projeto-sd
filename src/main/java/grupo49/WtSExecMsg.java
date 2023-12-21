@@ -22,6 +22,12 @@ public class WtSExecMsg implements WtSMsg {
         this.data = data;
     }
 
+    public WtSExecMsg(WtSExecMsg msg) {
+        this.requestN = msg.requestN;
+        this.memUsed = msg.memUsed;
+        this.data = msg.data;
+    }
+
     //serialize sends msgType before data, for server msg distinction!!
     public void serialize(DataOutputStream dos) throws IOException{
         dos.writeByte(opcode);
@@ -82,5 +88,9 @@ public class WtSExecMsg implements WtSMsg {
         return sb.toString();
     }
 
+    @Override
+    public WtSMsg clone() {
+        return new WtSExecMsg(this);
+    }
 }
 

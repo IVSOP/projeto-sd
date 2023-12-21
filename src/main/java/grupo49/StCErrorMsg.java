@@ -23,6 +23,11 @@ public class StCErrorMsg implements StCMsg {
         this.error = error;
     }
 
+    public StCErrorMsg(StCErrorMsg msg) {
+        this.requestN = msg.requestN;
+        this.error = msg.error;
+    }
+
     //serialize sends msgType before data, for server msg distinction!!
     public void serialize(DataOutputStream dos) throws IOException{
         dos.writeByte(opcode);
@@ -48,7 +53,7 @@ public class StCErrorMsg implements StCMsg {
 
     public byte[] getResultInBytes() {
         StringBuilder sb = new StringBuilder();
-        sb.append(" error: +" + this.error);
+        sb.append("error: " + this.error);
         return sb.toString().getBytes();
     }
 
@@ -62,9 +67,14 @@ public class StCErrorMsg implements StCMsg {
 
     @Override
     public String toString() {
-    StringBuilder sb = new StringBuilder();
-    sb.append("reqN: " + this.requestN);
-    sb.append(" error: +" + this.error);
+        StringBuilder sb = new StringBuilder();
+        sb.append("reqN: " + this.requestN);
+        sb.append(" error: +" + this.error);
     return sb.toString();
-}
+    }
+
+    @Override
+    public StCMsg clone() {
+        return new StCErrorMsg(this);
+    }
 }

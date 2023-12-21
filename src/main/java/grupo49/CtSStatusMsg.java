@@ -17,6 +17,10 @@ public class CtSStatusMsg implements CtSMsg {
         this.requestN = requestN;
     }
 
+    public CtSStatusMsg(CtSStatusMsg msg) {
+        this.requestN = msg.requestN;
+    }
+
     //serialize sends msgType before data, for server msg distinction!!
     public void serialize(DataOutputStream dos) throws IOException{
         dos.writeByte(opcode);
@@ -43,5 +47,10 @@ public class CtSStatusMsg implements CtSMsg {
         StringBuilder sb = new StringBuilder();
         sb.append(" reqN: " + this.requestN);
         return sb.toString();
+    }
+
+    @Override
+    public CtSMsg clone() {
+        return new CtSStatusMsg(this);
     }
 }

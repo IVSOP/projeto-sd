@@ -10,8 +10,13 @@ public class WtSRegMsg implements WtSMsg {
     private int memAvailable;
 
     public WtSRegMsg() {};
+    
     public WtSRegMsg(int memAvailable) {
         this.memAvailable = memAvailable;
+    }
+
+    public WtSRegMsg(WtSRegMsg msg) {
+        this.memAvailable = msg.memAvailable;
     }
 
     //serialize sends msgType before data, for server msg distinction!!
@@ -32,5 +37,10 @@ public class WtSRegMsg implements WtSMsg {
 
     public int getRequestN() {
         return -1;
+    }
+
+    @Override
+    public WtSMsg clone() {
+        return new WtSRegMsg(this);
     }
 }

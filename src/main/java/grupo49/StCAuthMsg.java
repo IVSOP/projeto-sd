@@ -21,6 +21,11 @@ public class StCAuthMsg implements StCMsg {
         this.info = info;
     }
 
+    public StCAuthMsg(StCAuthMsg msg) {
+        this.success = msg.success;
+        this.info = msg.info;
+    }
+
     //serialize sends msgType before data, for server msg distinction!!
     public void serialize(DataOutputStream dos) throws IOException{
         dos.writeByte(opcode);
@@ -63,8 +68,13 @@ public class StCAuthMsg implements StCMsg {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(" successfull: " + this.success);
+        sb.append("successfull: " + this.success);
         sb.append(" info: +" + this.info);
         return sb.toString();
+    }
+
+    @Override
+    public StCMsg clone() {
+        return new StCAuthMsg(this);
     }
 }

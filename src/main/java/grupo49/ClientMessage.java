@@ -60,4 +60,9 @@ public class ClientMessage<T extends IMessage> {
        sb.append(this.message.toString());
         return sb.toString();
     }
+
+    @Override
+    public ClientMessage<T> clone() {
+        return new ClientMessage(this.clientId,this.message.clone());
+    }
 }

@@ -20,6 +20,11 @@ public class CtSRegMsg implements CtSMsg {
         this.password = password;
     }
 
+    public CtSRegMsg(CtSRegMsg msg) {
+        this.name = msg.name;
+        this.password = msg.password;
+    }
+
     public void serialize(DataOutputStream dos) throws IOException{
         dos.writeByte(opcode);
         
@@ -62,6 +67,11 @@ public class CtSRegMsg implements CtSMsg {
         sb.append("name: " + this.name);
         sb.append(" pass: " + this.password);
         return sb.toString();
+    }
+
+    @Override
+    public CtSMsg clone() {
+        return new CtSRegMsg(this);
     }
 
 }

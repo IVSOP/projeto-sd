@@ -22,6 +22,12 @@ public class StCStatusMsg implements StCMsg {
         this.pending = pending;
     }
 
+    public StCStatusMsg(StCStatusMsg msg) {
+        this.requestN = msg.requestN;
+        this.mem = msg.mem;
+        this.pending = msg.pending;
+    }
+
     //serialize sends msgType before data, for server msg distinction!!
     public void serialize(DataOutputStream dos) throws IOException{
         dos.writeByte(opcode);
@@ -53,7 +59,7 @@ public class StCStatusMsg implements StCMsg {
 
     public byte[] getResultInBytes() {
         StringBuilder sb = new StringBuilder();
-        sb.append(" mem: " + this.mem);
+        sb.append("mem: " + this.mem);
         sb.append(" pending: " + this.pending);
         return sb.toString().getBytes();
     }
@@ -77,5 +83,10 @@ public class StCStatusMsg implements StCMsg {
         sb.append(" mem: " + this.mem);
         sb.append(" pending: " + this.pending);
         return sb.toString();
+    }
+
+    @Override
+    public StCMsg clone() {
+        return new StCStatusMsg(this);
     }
 }

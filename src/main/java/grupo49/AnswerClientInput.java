@@ -124,9 +124,7 @@ public class AnswerClientInput implements Runnable {
 							baseMsg.deserialize(in);
 							System.out.println("Client " + data.ID + " asking for exec " + baseMsg.getRequestN());
 							// System.out.println(baseMsg.toString()); // debug
-
-							msgToPush.setClient(data.ID);
-							msgToPush.setMessage(baseMsg);
+							msgToPush = new ClientMessage<>(data.ID,baseMsg);
 							server.pushInputBufferClient(msgToPush, data); // push message to global server input array
 							System.out.println("Client " + data.ID + " pushed exec request " + baseMsg.getRequestN());
 
