@@ -1,6 +1,7 @@
 package grupo49;
 
 import java.net.UnknownHostException;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -61,7 +62,13 @@ public class ClientUI {
 
 	private static String askForInput(String msg) {
 		System.out.print(msg);
-		return scanner.nextLine();
+		try {
+			return scanner.nextLine();
+		} catch (NoSuchElementException e) {
+			System.out.println("Nothing to read, exiting");
+			System.exit(1);
+			return null; // so para isto poder compilar
+		}
 	}
 
 	private static Client authenticateClient() {
