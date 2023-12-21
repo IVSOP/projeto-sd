@@ -25,7 +25,7 @@ public class WtSExecMsg implements WtSMsg {
     public WtSExecMsg(WtSExecMsg msg) {
         this.requestN = msg.requestN;
         this.memUsed = msg.memUsed;
-        this.data = msg.data;
+        this.data = msg.data.clone();
     }
 
     //serialize sends msgType before data, for server msg distinction!!

@@ -33,7 +33,7 @@ public class ClientInputRunnable implements Runnable {
 						message.deserialize(in);
 						break;
 				}
-				this.inputBuffer.push(message);
+				this.inputBuffer.push(message.clone());
 			}
             
 		} catch (IOException e) {

@@ -26,7 +26,7 @@ public class CtSExecMsg implements CtSMsg {
     public CtSExecMsg(CtSExecMsg msg) {
         this.requestN = msg.requestN;
         this.mem = msg.mem;
-        this.data = msg.data;
+        this.data = msg.data.clone();
     }
 
     //serialize sends msgType before data, for server msg distinction!!

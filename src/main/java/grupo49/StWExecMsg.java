@@ -25,7 +25,7 @@ public class StWExecMsg implements StWMsg {
     public StWExecMsg(StWExecMsg msg) {
         this.requestN = msg.requestN;
         this.memUsed = msg.memUsed;
-        this.data = msg.data;
+        this.data = msg.data.clone();
     }
 
     public void serialize(DataOutputStream dos) throws IOException{

@@ -44,7 +44,7 @@ public class WorkerWorkRunnable implements Runnable {
 
 				ClientMessage<WtSMsg> finalMsg = new ClientMessage<>(inputMsg.getClient(), innerMsg);
 				// System.out.println("Processed task: " + finalMsg.toString());
-				this.outputBuffer.push(finalMsg);
+				this.outputBuffer.push(finalMsg.clone());
 			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();

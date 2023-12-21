@@ -24,7 +24,7 @@ public class StCExecMsg implements StCMsg {
 
     public StCExecMsg(StCExecMsg msg) {
         this.requestN = msg.requestN;
-        this.data = msg.data;
+        this.data = msg.data.clone();
     }
 
     //serialize sends msgType before data, for server msg distinction!!

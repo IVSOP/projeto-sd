@@ -167,7 +167,7 @@ public class Server
 				clientInfo.permissionToPush.await();
 			}
 
-			inputBufferClient.push(message);
+			inputBufferClient.push(message.clone());
 			clientInfo.n_currentJobs ++;
 		} catch (InterruptedException e) {
 			e.printStackTrace();
@@ -191,7 +191,7 @@ public class Server
 			// it cannot use many requests
 			clientInfo.serverPushLock.lock(); // precisamos da lock para alterar a variavel n_currentJobs e para garantir que buffer nao e 'apagado'
 			if (clientInfo.outputBuffer != null) { // se client estiver logged out, vai ser null
-				clientInfo.outputBuffer.push(message);
+				clientInfo.outputBuffer.push(message.clone());
 				clientInfo.n_currentJobs --;
 				clientInfo.permissionToPush.signal(); // acordar 1 thread que esteja a esperar			
 			} else { // por seguranca, reset completo de tudo. isto nao e muito bom, mas acho que previne crashar tudo com logouts inesperados
@@ -258,7 +258,7 @@ public class Server
 			data.ownerThread.addMemoryAndJobs(new OcupationData(- memUsed, -1));
 			
 			data.workerLock.writeLock().unlock(); // unlocked here since no other changes will be made and the push itself will block
-			inputBufferWorker.push(message);
+			inputBufferWorker.push(message.clone());
 			System.out.println("Client " + message.getClient() + " message " + message.getMessage().getRequestN() + " returned from worker " + data.ID);
 
 		} catch (InterruptedException e) {

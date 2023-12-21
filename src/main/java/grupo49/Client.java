@@ -72,12 +72,12 @@ public class Client
 		requestID++;
 		System.out.println("sending request for task " + requestID);
 		msg.setRequestN(requestID);
-		outputBuffer.push(msg);
+		outputBuffer.push(msg.clone());
 	}
 
 	public boolean registerClient() throws IOException, InterruptedException{
 		CtSMsg msg = new CtSRegMsg(name,password);
-		outputBuffer.push(msg);
+		outputBuffer.push(msg.clone());
 		StCAuthMsg response = new StCAuthMsg();
 		in.readByte(); //ignorar
 		response.deserialize(in);
@@ -86,7 +86,7 @@ public class Client
 
 	public boolean loginClient() throws IOException, InterruptedException {
 		CtSMsg msg = new CtSLoginMsg(name,password);
-		outputBuffer.push(msg);
+		outputBuffer.push(msg.clone());
 		StCAuthMsg response = new StCAuthMsg();
 		in.readByte(); //ignorar
 		response.deserialize(in);

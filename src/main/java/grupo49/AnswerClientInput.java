@@ -143,7 +143,7 @@ public class AnswerClientInput implements Runnable {
 								StCStatusMsg statusMsg = 
 									new StCStatusMsg(((CtSStatusMsg) baseMsg).getRequestN(), ocupation.getMemRemaining(),ocupation.getCurrentJobs());
 									
-								data.outputBuffer.push(statusMsg); // meter no output buffer de cliente
+								data.outputBuffer.push(statusMsg.clone()); // meter no output buffer de cliente
 							
 							} catch (InterruptedException e) {
 								e.printStackTrace();
