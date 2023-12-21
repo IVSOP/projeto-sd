@@ -7,13 +7,15 @@
 #include <string.h>
 #include <time.h>
 
+#define NUM_SPAM 10
+
 void spam_clients(int pipe_array[][2], int total_clients, int j) {
 	// int r = rand();
 	int i;
 	const char message[] = "2\n";
 	const char file[] = "1\ntests/sample_text.txt\n";
 	for (i = 0; i < total_clients; i++) {
-		if (i == j) {
+		if (i % NUM_SPAM == j) {
 			write(pipe_array[i][1], message, strlen(message));
 		} else {
 			write(pipe_array[i][1], file, strlen(file));
@@ -41,8 +43,8 @@ int main (int argc, char *argv[]) {
 		if ((pid = fork()) == 0) {
 			close(pipe_array[i][1]);
 
-			close(STDOUT_FILENO);
-			close(STDERR_FILENO);
+			// close(STDOUT_FILENO);
+			// close(STDERR_FILENO);
 
 			if (dup2(pipe_array[i][0], STDIN_FILENO) == -1) {
 				perror("dup2");
@@ -80,7 +82,7 @@ int main (int argc, char *argv[]) {
 	// memory is 50 per request
 
 	if (confirmation == 'y') {
-		for (i = 0; i < 10; i++) {
+		for (i = 0; i < NUM_SPAM; i++) {
 			spam_clients(pipe_array, total_clients, i);
 		}
 	}

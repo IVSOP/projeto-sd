@@ -126,16 +126,16 @@ public class AnswerClientInput implements Runnable {
 							// System.out.println(baseMsg.toString()); // debug
 							msgToPush = new ClientMessage<>(data.ID,baseMsg);
 							server.pushInputBufferClient(msgToPush, data); // push message to global server input array
-							System.out.println("Client " + data.ID + " pushed exec request " + baseMsg.getRequestN());
+							// System.out.println("Client " + data.ID + " pushed exec request " + msgToPush.getMessage().getRequestN());
 
 							break;
 
 						// mensagens de status são tratadas aqui, para caso fica locked a inserir no outputBuffer do cliente, so afetar esta thread
 						// Senão ter-se-ia de empurrar a mensagem para o buffer global, e possivelmente dar lock a uma das threads nesse buffer, o que atrasava o processamento de pedidos de outros clientes
 						case 3:
-							System.out.println("Client " + data.ID + " asking for status");
 							baseMsg = new CtSStatusMsg();
 							baseMsg.deserialize(in);
+							System.out.println("Client " + data.ID + " asking for status " + baseMsg.getRequestN());
 							// System.out.println("Received from client\n" + baseMsg.toString()); // debug
 
 							try {
