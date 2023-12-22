@@ -1,5 +1,7 @@
 package grupo49;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
@@ -23,8 +25,8 @@ public class HandleWorkerInput implements Runnable {
 	@Override
 	public void run() {
 		try {
-			DataInputStream in = new DataInputStream(socket.getInputStream());
-			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+			DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+			DataOutputStream out = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 
 			try {
 				/////////////////////////////////// WORKER FIRST MESSAGE
@@ -69,8 +71,8 @@ public class HandleWorkerInput implements Runnable {
 							
 							break;
 					}
-					// System.out.println("Request " + msgToPush.getMessage().getRequestN() + " from client " + msgToPush.getClient() + "received from worker " + data.ID);
 					server.pushInputBufferWorker(msgToPush, this.data, memUsed);
+					System.out.println("Request " + msgToPush.getMessage().getRequestN() + " from client " + msgToPush.getClient() + " received from worker " + data.ID);
 				}
 
 			} catch (EOFException e) { // chamada quando socket fecha do outro lado e temos erro a dar read

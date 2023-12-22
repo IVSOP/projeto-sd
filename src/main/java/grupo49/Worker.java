@@ -1,5 +1,7 @@
 package grupo49;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
@@ -27,8 +29,8 @@ public class Worker
 		this.outputBuffer = new BoundedBuffer<ClientMessage<WtSMsg>>(outputBufferSize);
 		this.memory = memory;
 		this.socket = new Socket(serverAddress, Server.PortToWorker);
-		this.in = new DataInputStream(socket.getInputStream());
-		this.out = new DataOutputStream(socket.getOutputStream());
+		this.in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+		this.out = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 	} 
 	
 	public Worker(String serverAddress, String localAddress, int memory) throws UnknownHostException, IOException {
@@ -37,8 +39,8 @@ public class Worker
 		this.memory = memory;
 												// por alguma razao local nao pode ser string mas destino pode
 		this.socket = new Socket(serverAddress, Server.PortToWorker, InetAddress.getByName(localAddress), Server.PortToWorker); // local port does not matter
-		this.in = new DataInputStream(socket.getInputStream());
-		this.out = new DataOutputStream(socket.getOutputStream());
+		this.in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+		this.out = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 	}
 
 	public static Worker registerWorker(Worker worker, DataOutputStream out) {	

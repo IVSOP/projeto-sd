@@ -7,10 +7,12 @@ import java.io.IOException;
 public class ClientInputRunnable implements Runnable {
 	public DataInputStream in;
 	public BoundedBuffer<StCMsg> inputBuffer;
+	public String name;
 
-	public ClientInputRunnable(DataInputStream in, BoundedBuffer<StCMsg> inputBuffer) {
+	public ClientInputRunnable(DataInputStream in, BoundedBuffer<StCMsg> inputBuffer, String name) {
 		this.in = in;
 		this.inputBuffer = inputBuffer;
+		this.name = name;
 	}
 
 	@Override
@@ -34,6 +36,7 @@ public class ClientInputRunnable implements Runnable {
 						break;
 				}
 				this.inputBuffer.push(message.clone());
+				System.out.println("Client " + name + ": Pushed message " + message.clone().getRequestN() + " to inputBuffer");
 			}
             
 		} catch (IOException e) {

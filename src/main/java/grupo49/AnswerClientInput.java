@@ -1,5 +1,7 @@
 package grupo49;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
@@ -46,8 +48,8 @@ public class AnswerClientInput implements Runnable {
     @Override
     public void run() {
 		try {
-			DataInputStream in = new DataInputStream(socket.getInputStream());
-			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+			DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+			DataOutputStream out = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 
 			System.out.println("New client connected");
 			try {
@@ -106,7 +108,7 @@ public class AnswerClientInput implements Runnable {
 					}
 				}	
 
-				outThread = new Thread(new AnswerClientOutput(out, data.outputBuffer)); // thread writing to the socket
+				outThread = new Thread(new AnswerClientOutput(out, data.outputBuffer, this.data.ID)); // thread writing to the socket
 				outThread.start();
 
 				// Client infinite loop
@@ -135,14 +137,14 @@ public class AnswerClientInput implements Runnable {
 						case 3:
 							baseMsg = new CtSStatusMsg();
 							baseMsg.deserialize(in);
-							System.out.println("Client " + data.ID + " asking for status " + baseMsg.getRequestN());
+							System.out.println("Client " + data.ID + " asking for status " + baseMsg.clone().getRequestN());
 							// System.out.println("Received from client\n" + baseMsg.toString()); // debug
 
 							try {
 								OcupationData ocupation = server.getOcupationData();
 								StCStatusMsg statusMsg = 
 									new StCStatusMsg(((CtSStatusMsg) baseMsg).getRequestN(), ocupation.getMemRemaining(),ocupation.getCurrentJobs());
-									
+								System.out.println("Client " + data.ID + " pushed status request " + statusMsg.clone().getRequestN());
 								data.outputBuffer.push(statusMsg.clone()); // meter no output buffer de cliente
 							
 							} catch (InterruptedException e) {

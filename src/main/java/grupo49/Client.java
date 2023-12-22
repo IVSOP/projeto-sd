@@ -1,5 +1,7 @@
 package grupo49;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -33,8 +35,8 @@ public class Client
 
 		this.socket = new Socket(serverAddress, Server.PortToClient);
 
-		this.in = new DataInputStream(socket.getInputStream());
-		this.out = new DataOutputStream(socket.getOutputStream());
+		this.in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+		this.out = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 
 		// thread dedicada a output
 		Thread outputThread = new Thread(new ClientOutputRunnable(out, outputBuffer));
@@ -95,7 +97,7 @@ public class Client
 
 	//EXTREMAMENTE CURSED, VER MELHOR DEPOIS!!!
 	public void startInput() {
-		Thread inputThread = new Thread(new ClientInputRunnable(in, inputBuffer));
+		Thread inputThread = new Thread(new ClientInputRunnable(in, inputBuffer, this.name));
 		inputThread.start();
 	}
 	 

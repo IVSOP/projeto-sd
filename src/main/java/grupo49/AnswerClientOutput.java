@@ -8,10 +8,12 @@ public class AnswerClientOutput implements Runnable {
 
     private DataOutputStream out;
 	private BoundedBuffer<StCMsg> outputBuffer;
+    private int clientId;
 
-    public AnswerClientOutput(DataOutputStream out, BoundedBuffer<StCMsg> outputBuffer) {
+    public AnswerClientOutput(DataOutputStream out, BoundedBuffer<StCMsg> outputBuffer, int clientID) {
 		this.out = out;
 		this.outputBuffer = outputBuffer;
+        this.clientId = clientID;
 	}
 
     @Override
@@ -20,6 +22,7 @@ public class AnswerClientOutput implements Runnable {
             while (true) {
 				StCMsg message = outputBuffer.pop();
 				message.serialize(out);
+                System.out.println("Message " + message.getRequestN() + " sent to " + clientId + " socket");
 			}
             
         } catch (IOException e) {
