@@ -36,7 +36,7 @@ public class HandleWorkerInput implements Runnable {
 				regMsg.deserialize(in);
 				this.data = server.registerWorker(regMsg.getMemAvail());
 				System.out.println("New worker connection, ID: " + this.data.ID +" mem " + this.data.memory);
-				outThread = new Thread(new HandleWorkerOutput(out, this.data.outputBuffer));
+				outThread = new Thread(new HandleWorkerOutput(out, this.data.outputBuffer, this.data.ID));
 				outThread.start();
 
 				/////////////////////////////////// WORKER INFINITE LOOP
@@ -72,7 +72,7 @@ public class HandleWorkerInput implements Runnable {
 							break;
 					}
 					server.pushInputBufferWorker(msgToPush, this.data, memUsed);
-					System.out.println("Request " + msgToPush.getMessage().getRequestN() + " from client " + msgToPush.getClient() + " received from worker " + data.ID);
+					System.out.println("Request " + msgToPush.getMessage().getRequestN() + " from client " + msgToPush.getClient() + " from worker " + data.ID + " pushed");
 				}
 
 			} catch (EOFException e) { // chamada quando socket fecha do outro lado e temos erro a dar read

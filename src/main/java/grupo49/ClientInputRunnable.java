@@ -7,12 +7,10 @@ import java.io.IOException;
 public class ClientInputRunnable implements Runnable {
 	public DataInputStream in;
 	public BoundedBuffer<StCMsg> inputBuffer;
-	public String name;
 
-	public ClientInputRunnable(DataInputStream in, BoundedBuffer<StCMsg> inputBuffer, String name) {
+	public ClientInputRunnable(DataInputStream in, BoundedBuffer<StCMsg> inputBuffer) {
 		this.in = in;
 		this.inputBuffer = inputBuffer;
-		this.name = name;
 	}
 
 	@Override
@@ -34,9 +32,12 @@ public class ClientInputRunnable implements Runnable {
 						message = new StCStatusMsg();
 						message.deserialize(in);
 						break;
+					default:
+						System.out.println("ERROR: invalid opcode: " + opcode);
+						break;
 				}
 				this.inputBuffer.push(message.clone());
-				System.out.println("Client " + name + ": Pushed message " + message.clone().getRequestN() + " to inputBuffer");
+				System.out.println("received message " + message.clone().getRequestN());
 			}
             
 		} catch (IOException e) {

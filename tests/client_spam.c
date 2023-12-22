@@ -45,6 +45,11 @@ int main (int argc, char *argv[]) {
 
 			// close(STDOUT_FILENO);
 			// close(STDERR_FILENO);
+			char filepath[32];
+			snprintf(filepath, 32, "client%d_out.txt", i);
+			freopen(filepath, "w", stdout);
+        	freopen(filepath, "w", stderr);
+
 
 			if (dup2(pipe_array[i][0], STDIN_FILENO) == -1) {
 				perror("dup2");
@@ -57,6 +62,8 @@ int main (int argc, char *argv[]) {
 			execlp("bash", "bash", "./client.sh", (char *)NULL);
 
 			//...
+
+			// fclose(stdout) ???????????
 
 			_exit(1);
 		} else {

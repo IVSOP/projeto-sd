@@ -52,7 +52,7 @@ public class Server
 		}
 	}
 
-	private final int MaxJobsPerClient = 5;
+	public static final int MaxJobsPerClient = 5;
 
 	public Server() {
 		this.clientID_counter = 0;
@@ -193,10 +193,11 @@ public class Server
 			if (clientInfo.outputBuffer != null) { // se client estiver logged out, vai ser null
 				clientInfo.outputBuffer.push(message.clone());
 				clientInfo.n_currentJobs --;
-				clientInfo.permissionToPush.signal(); // acordar 1 thread que esteja a esperar			
+				clientInfo.permissionToPush.signal(); // acordar 1 thread que esteja a esperar
 			} else { // por seguranca, reset completo de tudo. isto nao e muito bom, mas acho que previne crashar tudo com logouts inesperados
 				clientInfo.n_currentJobs --; // fingimos que 1 job foi concluido
 				clientInfo.permissionToPush.signal();
+				System.out.println("ERROR: client " + clientId + " does not have a buffer");
 			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();
@@ -257,8 +258,8 @@ public class Server
 			data.ownerThread.addMemoryAndJobs(new OcupationData(memUsed, -1));
 			
 			data.workerLock.writeLock().unlock(); // unlocked here since no other changes will be made and the push itself will block
+			System.out.println("Client " + message.getClient() + " message " + message.getMessage().getRequestN() + " returned from worker " + data.ID + ", pushing");
 			inputBufferWorker.push(message.clone());
-			System.out.println("Client " + message.getClient() + " message " + message.getMessage().getRequestN() + " returned from worker " + data.ID);
 
 		} catch (InterruptedException e) {
 			e.printStackTrace();

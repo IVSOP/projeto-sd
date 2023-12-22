@@ -140,17 +140,36 @@ public class AnswerClientInput implements Runnable {
 							System.out.println("Client " + data.ID + " asking for status " + baseMsg.clone().getRequestN());
 							// System.out.println("Received from client\n" + baseMsg.toString()); // debug
 
-							try {
+								// increase the client's number of jobs
+								try {
+									data.serverPushLock.lock();
+						
+									while (data.n_currentJobs >= Server.MaxJobsPerClient) {
+										// client sent too many requests too quick, will have to stay blocked until other jobs finish
+										data.permissionToPush.await();
+									}
+
+									data.n_currentJobs ++;
+								} catch (InterruptedException e) {
+									e.printStackTrace();
+								} finally {
+									data.serverPushLock.unlock();
+								}
+
+							// try {
 								OcupationData ocupation = server.getOcupationData();
-								StCStatusMsg statusMsg = 
-									new StCStatusMsg(((CtSStatusMsg) baseMsg).getRequestN(), ocupation.getMemRemaining(),ocupation.getCurrentJobs());
+								StCStatusMsg statusMsg = new StCStatusMsg(baseMsg.getRequestN(), ocupation.getMemRemaining(),ocupation.getCurrentJobs());
+								server.pushClientOutput(data.ID, statusMsg);
 								System.out.println("Client " + data.ID + " pushed status request " + statusMsg.clone().getRequestN());
-								data.outputBuffer.push(statusMsg.clone()); // meter no output buffer de cliente
+								// data.outputBuffer.push(statusMsg.clone()); // meter no output buffer de cliente
 							
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-							}
+							// } catch (InterruptedException e) {
+							// 	e.printStackTrace();
+							// }
 							break;
+						default:
+							System.out.println("ERROR");
+							System.exit(1);
 					}
 				}
 
@@ -163,7 +182,7 @@ public class AnswerClientInput implements Runnable {
 				throw new IOException(e); // mesmo que corra bem damos throw, assim fecha-se tudo em baixo
 
 			}
-		} catch (IOException e) {
+		} catch (IOException e) { // socket fechar pode estar aqui?????????????
 			// e.printStackTrace();
 			// kill output thread
 			outThread.interrupt();

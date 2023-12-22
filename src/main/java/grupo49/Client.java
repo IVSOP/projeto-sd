@@ -42,6 +42,8 @@ public class Client
 		Thread outputThread = new Thread(new ClientOutputRunnable(out, outputBuffer));
 		outputThread.start();
 
+		// System.out.println("Started client on local port" + socket.getLocalPort());
+
 		// thread dedicada a input (nao fica aqui porque ClientUI ao chamar isto nao pode ficar bloqueada)
 		// Thread inputThread = new Thread(new ClientInputRunnable(in, inputBuffer));
 		// inputThread.start();
@@ -72,7 +74,6 @@ public class Client
 
 	private void sendRequest(CtSMsg msg) throws InterruptedException {
 		requestID++;
-		System.out.println("sending request for task " + requestID);
 		msg.setRequestN(requestID);
 		outputBuffer.push(msg.clone());
 	}
@@ -97,7 +98,7 @@ public class Client
 
 	//EXTREMAMENTE CURSED, VER MELHOR DEPOIS!!!
 	public void startInput() {
-		Thread inputThread = new Thread(new ClientInputRunnable(in, inputBuffer, this.name));
+		Thread inputThread = new Thread(new ClientInputRunnable(in, inputBuffer));
 		inputThread.start();
 	}
 	 
@@ -107,11 +108,13 @@ public class Client
 
 	public void sendExecMsg(int mem, byte[] barray) throws InterruptedException {
 		CtSMsg msg = new CtSExecMsg(mem,barray);
+		System.out.println("sending exec request " + requestID);
 		sendRequest(msg);
 	}
 
 	public void sendStatusMsg() throws InterruptedException {
 		CtSMsg msg = new CtSStatusMsg();
+		System.out.println("sending status request " + requestID);
 		sendRequest(msg);
 	}
 

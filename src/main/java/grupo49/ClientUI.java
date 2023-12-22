@@ -168,7 +168,6 @@ public class ClientUI {
     }
 
 	private static void writeToFile(Client client, StCMsg message, String outputPath) {
-		// qual é suposto ser o ficheiro de output?? muda para cada request, muda para cada cliente?
         String outputFile = outputPath +  client.getName() + "-" + message.getRequestN() + ".txt";
 		try (BufferedOutputStream writer = new BufferedOutputStream(new FileOutputStream(outputFile))) {
             writer.write(message.getResultInBytes());
