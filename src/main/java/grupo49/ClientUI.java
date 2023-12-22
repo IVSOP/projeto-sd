@@ -14,6 +14,15 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 public class ClientUI {
+	public static class MemoryAndBytes { // wrapper para ler tudo de uma vez dum ficheiro
+		int memNeeded;
+		byte[] requestMsg;
+
+		MemoryAndBytes(int memNeeded, byte[] requestMsg) {
+			this.memNeeded = memNeeded;
+			this.requestMsg = requestMsg;
+		}
+	}
 	private static Scanner scanner = new Scanner(System.in);
 	public static void main(String[] args) throws UnknownHostException, InterruptedException {
 
@@ -46,10 +55,11 @@ public class ClientUI {
 				// pedir nome do ficheiro de input
 				// se for para dar submit e buffer de output estiver cheio, vai bloquear
 				String filePath = askForInput("Enter the file path for job input: ");
-				int memNeeded = readMemFromFile(filePath);
-				byte[] requestMsg = readInputBytesFromFile(filePath);
-				System.out.println("Sending exec msg from path:" + filePath + " mem: " + memNeeded);
-				client.sendExecMsg(memNeeded,requestMsg);
+				MemoryAndBytes fileInfo = readExecFile(filePath);
+				// int memNeeded = readMemFromFile(filePath);
+				// byte[] requestMsg = readInputBytesFromFile(filePath);
+				System.out.println("Sending exec msg from path:" + filePath + " mem: " + fileInfo.memNeeded);
+				client.sendExecMsg(fileInfo.memNeeded, fileInfo.requestMsg);
 			}
 			else if (input.equals("2")) { // Pedido de estado
 				client.sendStatusMsg();
@@ -139,41 +149,60 @@ public class ClientUI {
 		return path;
 	}
 
-	private static int readMemFromFile(String filePath) {
-        int memNeeded = 0;
-        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
-            memNeeded = Integer.parseInt(reader.readLine());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return memNeeded;
-    }
+	// private static int readMemFromFile(String filePath) {
+    //     int memNeeded = 0;
+    //     try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+    //         memNeeded = Integer.parseInt(reader.readLine());
+    //     } catch (IOException e) {
+    //         e.printStackTrace();
+    //     }
+    //     return memNeeded;
+    // }
 
-	private static byte[] readInputBytesFromFile(String filePath) {
-        byte[] fileBytes = null;
+	// private static byte[] readInputBytesFromFile(String filePath) {
+    //     byte[] fileBytes = null;
+    //     try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+	// 		// // Skip 1ª linha
+	// 		reader.readLine();
+    //         StringBuilder content = new StringBuilder();
+    //         String line;
+    //         while ((line = reader.readLine()) != null) {
+    //             content.append(line).append(System.lineSeparator());
+    //         }
+	// 		//System.out.println("Read from file " + line);
+    //         fileBytes = content.toString().getBytes();
+    //     } catch (IOException e) {
+    //         e.printStackTrace();
+    //     }
+    //     return fileBytes;
+    // }
+
+	// estou a assumir 1 so linha de texto, mas e facil de mudar
+	private static MemoryAndBytes readExecFile(String filePath) {
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
-			// // Skip 1ª linha
-			reader.readLine();
-            StringBuilder content = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                content.append(line).append(System.lineSeparator());
-            }
-			//System.out.println("Read from file " + line);
-            fileBytes = content.toString().getBytes();
+			int memNeeded = Integer.parseInt(reader.readLine());
+			byte[] requestMsg = reader.readLine().getBytes();
+
+			reader.close();
+			return new MemoryAndBytes(memNeeded, requestMsg);
         } catch (IOException e) {
             e.printStackTrace();
+			System.out.println("ERROR");
+			System.exit(1);
         }
-        return fileBytes;
-    }
+        return null; // nunca deve correr
+	}
 
 	private static void writeToFile(Client client, StCMsg message, String outputPath) {
         String outputFile = outputPath +  client.getName() + "-" + message.getRequestN() + ".txt";
 		try (BufferedOutputStream writer = new BufferedOutputStream(new FileOutputStream(outputFile))) {
             writer.write(message.getResultInBytes());
             //writer.newLine();
+			writer.close();
         } catch (IOException e) {
             e.printStackTrace();
+			System.out.println("ERROR");
+			System.exit(1);
         }
     }
 }

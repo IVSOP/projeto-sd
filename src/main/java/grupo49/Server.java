@@ -194,7 +194,7 @@ public class Server
 				clientInfo.outputBuffer.push(message.clone());
 				clientInfo.n_currentJobs --;
 				clientInfo.permissionToPush.signal(); // acordar 1 thread que esteja a esperar
-			} else { // por seguranca, reset completo de tudo. isto nao e muito bom, mas acho que previne crashar tudo com logouts inesperados
+			} else { // por seguranca. isto nao e muito bom, mas acho que previne crashar tudo com logouts inesperados, jobs vao para o lixo simplesmente
 				clientInfo.n_currentJobs --; // fingimos que 1 job foi concluido
 				clientInfo.permissionToPush.signal();
 				System.out.println("ERROR: client " + clientId + " does not have a buffer");
