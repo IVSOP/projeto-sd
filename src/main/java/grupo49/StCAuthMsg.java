@@ -35,6 +35,13 @@ public class StCAuthMsg implements StCMsg {
         dos.flush();
     }
 
+    public void serializeWithoutFlush(DataOutputStream dos) throws IOException{
+        dos.writeByte(opcode);
+
+        dos.writeBoolean(this.success);
+        dos.writeUTF(this.info);
+    }
+
     //deserialize assumes opcode was previously read, only uses information after opcode
     public void deserialize(DataInputStream dis) throws IOException{
         this.setSuccess(dis.readBoolean());

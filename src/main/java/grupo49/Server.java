@@ -164,6 +164,7 @@ public class Server
 
 			while (clientInfo.n_currentJobs >= MaxJobsPerClient) {
 				// client sent too many requests too quick, will have to stay blocked until other jobs finish
+				System.out.println("Client " + clientInfo.ID + " waiting for answer before other requests");
 				clientInfo.permissionToPush.await();
 			}
 

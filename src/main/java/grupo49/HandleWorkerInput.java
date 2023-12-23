@@ -71,6 +71,7 @@ public class HandleWorkerInput implements Runnable {
 							
 							break;
 					}
+					System.out.println("Request " + msgToPush.getMessage().getRequestN() + " from client " + msgToPush.getClient() + " from worker " + data.ID + " BEING PUSHED");
 					server.pushInputBufferWorker(msgToPush, this.data, memUsed);
 					System.out.println("Request " + msgToPush.getMessage().getRequestN() + " from client " + msgToPush.getClient() + " from worker " + data.ID + " pushed");
 				}

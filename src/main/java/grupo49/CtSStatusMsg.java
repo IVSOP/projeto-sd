@@ -29,6 +29,12 @@ public class CtSStatusMsg implements CtSMsg {
         dos.flush();
     }
 
+    public void serializeWithoutFlush(DataOutputStream dos) throws IOException{
+        dos.writeByte(opcode);
+
+        dos.writeInt(this.requestN);
+    }
+
     //deserialize assumes opcode was previously read, only uses information after opcode
     public void deserialize(DataInputStream dis) throws IOException {
         this.setRequestN(dis.readInt());

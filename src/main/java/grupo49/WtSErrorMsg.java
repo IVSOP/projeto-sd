@@ -38,6 +38,14 @@ public class WtSErrorMsg implements WtSMsg {
         dos.flush();
     }
 
+    public void serializeWithoutFlush(DataOutputStream dos) throws IOException{
+        dos.writeByte(opcode);
+
+        dos.writeInt(this.requestN);
+        dos.writeInt(this.memUsed);
+        dos.writeUTF(this.error);
+    }
+
     //deserialize assumes opcode was previously read, only uses information after opcode
     public void deserialize(DataInputStream dis) throws IOException{
         this.setRequestN(dis.readInt());

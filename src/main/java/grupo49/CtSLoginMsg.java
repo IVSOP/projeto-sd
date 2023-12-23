@@ -34,6 +34,13 @@ public class CtSLoginMsg implements CtSMsg{
         dos.flush();
     }
 
+    public void serializeWithoutFlush(DataOutputStream dos) throws IOException{
+        dos.writeByte(opcode);
+        
+        dos.writeUTF(this.name);
+        dos.writeUTF(this.password);
+    }
+    
     //deserialize assumes opcode was previously read, only uses information after opcode
     public void deserialize(DataInputStream dis) throws IOException {
         this.setName(dis.readUTF());

@@ -69,8 +69,8 @@ public class AnswerClientInput implements Runnable {
 								StCAuthMsg regFail = new StCAuthMsg(false, "Client already exists");
 								regFail.serialize(out);
 							} else {
-								System.out.println("Received Client register: successful register");
 								this.data = server.registerClient(authMsg.getName(), authMsg.getPassword());
+								System.out.println("Received Client register: successful register for client " + authMsg.getName() + " as #" + data.ID);
 								authSuccessful = true;
 								StCAuthMsg regTrue = new StCAuthMsg(true, "Client registered correctly");
 								regTrue.serialize(out);
@@ -124,10 +124,18 @@ public class AnswerClientInput implements Runnable {
 						case 2:
 							baseMsg = new CtSExecMsg();
 							baseMsg.deserialize(in);
+							if (baseMsg.getRequestN() != baseMsg.clone().getRequestN()) {
+								System.out.println("ERROR1 IN CLONE");
+								System.exit(1);
+							}
+							if (baseMsg.hashCode() == baseMsg.clone().hashCode()) {
+								System.out.println("ERROR2 IN CLONE");
+								System.exit(1);
+							}
 							System.out.println("Client " + data.ID + " asking for exec " + baseMsg.getRequestN());
 							// System.out.println(baseMsg.toString()); // debug
 							msgToPush = new ClientMessage<>(data.ID,baseMsg);
-							server.pushInputBufferClient(msgToPush, data); // push message to global server input array
+							server.pushInputBufferClient(msgToPush, data); // push message to global server input array. will block if client sends too many requests
 							// System.out.println("Client " + data.ID + " pushed exec request " + msgToPush.getMessage().getRequestN());
 
 							break;
@@ -137,6 +145,14 @@ public class AnswerClientInput implements Runnable {
 						case 3:
 							baseMsg = new CtSStatusMsg();
 							baseMsg.deserialize(in);
+							if (baseMsg.getRequestN() != baseMsg.clone().getRequestN()) {
+								System.out.println("ERROR1 IN CLONE");
+								System.exit(1);
+							}
+							if (baseMsg.hashCode() == baseMsg.clone().hashCode()) {
+								System.out.println("ERROR2 IN CLONE");
+								System.exit(1);
+							}
 							System.out.println("Client " + data.ID + " asking for status " + baseMsg.clone().getRequestN());
 							// System.out.println("Received from client\n" + baseMsg.toString()); // debug
 
@@ -146,6 +162,7 @@ public class AnswerClientInput implements Runnable {
 						
 									while (data.n_currentJobs >= Server.MaxJobsPerClient) {
 										// client sent too many requests too quick, will have to stay blocked until other jobs finish
+										System.out.println("Client " + data.ID + " waiting for answer before other requests");
 										data.permissionToPush.await();
 									}
 

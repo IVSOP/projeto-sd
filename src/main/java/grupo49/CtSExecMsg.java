@@ -40,6 +40,14 @@ public class CtSExecMsg implements CtSMsg {
         dos.flush();
     }
 
+    public void serializeWithoutFlush(DataOutputStream dos) throws IOException{
+        dos.writeByte(opcode);
+        dos.writeInt(this.requestN);
+        dos.writeInt(this.mem);
+        dos.writeInt(this.data.length);
+        dos.write(this.data);
+    }
+
     //deserialize assumes opcode was previously read, only uses information after opcode
     public void deserialize(DataInputStream dis) throws IOException {
         this.setRequestN(dis.readInt());

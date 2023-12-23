@@ -115,6 +115,7 @@ public class ThreadWorkerInfo {
 							// NOTA: este push em teoria pode bloquear e, assim, mete todos os outros workers desta thread em espera
 							// mas como este e um dos melhores workers e incrementamos aqui o jobs, significa que em qualquer outro woker seria necessario esperar
 							// podemos ter azar em que escolher outro daria 'unlock' da sua espera mais rapido, mas nao e possivel prever isso, so se fizesse um select() extremament manhoso ou assim
+							data.workerLock.writeLock().unlock();
 							data.outputBuffer.push(outputMessage.clone());
 							success = true;
 							// System.out.println("Client " + outputMessage.getClient() + " message " + ((StWExecMsg) outputMessage.getMessage()).getRequestN() + " dispatched to worker " + data.ID);
@@ -122,7 +123,7 @@ public class ThreadWorkerInfo {
 							break;
 						}
 					} finally {
-						data.workerLock.writeLock().unlock();
+						if (!success) data.workerLock.writeLock().unlock(); // previne unlock varias vezes ao mesmo
 					}
 				}
 			} while (success == false);

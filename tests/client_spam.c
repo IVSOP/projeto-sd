@@ -70,17 +70,26 @@ int main (int argc, char *argv[]) {
 			pid_array[i] = pid;
 
 			close(pipe_array[i][0]);
+		}
+	}
 
-			char message[64];
+	printf("Please wait for all clients to start up.\nEnter y to register all clients\n");
+	char confirmation;
+	scanf("%c", &confirmation);
+
+	char message[64];
+	if (confirmation == 'y') {
+		for (i = 0; i < total_clients; i++) {
 			snprintf(message, 64, "0.0.0.0\n%d\n%d\nR\noutputs/\n", i, i);
 			write(pipe_array[i][1], message, strlen(message));
 
-			printf("Spawned and registered %d\n", i);
+			printf("Written to %d\n", i);
+			usleep(250000);
 		}
 	}
 
 	printf("Please wait for all clients to register.\nEnter y to begin turbo pro max spam\n");
-	char confirmation;
+	scanf("%c", &confirmation); // newline, idk
 	scanf("%c", &confirmation);
 
 	// srand(time(NULL));

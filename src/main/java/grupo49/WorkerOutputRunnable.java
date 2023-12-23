@@ -18,7 +18,9 @@ public class WorkerOutputRunnable implements Runnable {
 		try {
             while (true) {
 				ClientMessage<WtSMsg> message = outputBuffer.pop();
+				System.out.println("Sending request " + message.getMessage().getRequestN() + " to client " + message.getClient());
 				message.serialize(out);
+				System.out.println("Sent request " + message.getMessage().getRequestN() + " to client " + message.getClient());
 			}
         } catch (InterruptedException e) {
 			e.printStackTrace();

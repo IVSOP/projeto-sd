@@ -43,8 +43,9 @@ public class ClientMessage<T extends IMessage> {
     }
     
     public void serialize(DataOutputStream dos) throws IOException{
-        this.message.serialize(dos);
+        this.message.serializeWithoutFlush(dos);
         dos.writeInt(clientId);
+		dos.flush();
     }
 
     //deserialize assumes opcode was previously read, only uses information after opcode
@@ -63,6 +64,6 @@ public class ClientMessage<T extends IMessage> {
 
     @Override
     public ClientMessage<T> clone() {
-        return new ClientMessage(this.clientId,this.message.clone());
-    }
+        return new ClientMessage(this.clientId, this.message.clone());
+    } 
 }
