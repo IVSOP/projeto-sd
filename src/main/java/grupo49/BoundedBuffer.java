@@ -87,7 +87,7 @@ public class BoundedBuffer<T> {
 		try {
 			lock.lock();
 	
-			while (queue.isFull()) { // full
+			while (queue.isAtFullCapacity()) { // queue.isFull() nunca funciona, posso ou nao ter ignorado as docs
 				notFull.await();
 			}
 	

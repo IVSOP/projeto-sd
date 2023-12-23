@@ -136,7 +136,7 @@ public class AnswerClientInput implements Runnable {
 							// System.out.println(baseMsg.toString()); // debug
 							msgToPush = new ClientMessage<>(data.ID,baseMsg);
 							server.pushInputBufferClient(msgToPush, data); // push message to global server input array. will block if client sends too many requests
-							// System.out.println("Client " + data.ID + " pushed exec request " + msgToPush.getMessage().getRequestN());
+							System.out.println("Client " + data.ID + " pushed exec request " + msgToPush.getMessage().getRequestN());
 
 							break;
 

@@ -44,7 +44,6 @@ public class StCStatusMsg implements StCMsg {
         dos.writeInt(this.requestN);
         dos.writeInt(this.mem);
         dos.writeInt(this.pending);
-        dos.flush();
     }
 
     //deserialize assumes opcode was previously read, only uses information after opcode

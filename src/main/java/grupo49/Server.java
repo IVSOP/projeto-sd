@@ -169,9 +169,11 @@ public class Server
 			}
 
 			inputBufferClient.push(message.clone());
+			// System.out.println("Pushed request " + message.getMessage().getRequestN() + " from client " + message.getClient() + " to global client buffer");
 			clientInfo.n_currentJobs ++;
 		} catch (InterruptedException e) {
 			e.printStackTrace();
+			System.out.println("ERROR");
 		} finally {
 			clientInfo.serverPushLock.unlock();
 		}
@@ -196,9 +198,9 @@ public class Server
 				clientInfo.n_currentJobs --;
 				clientInfo.permissionToPush.signal(); // acordar 1 thread que esteja a esperar
 			} else { // por seguranca. isto nao e muito bom, mas acho que previne crashar tudo com logouts inesperados, jobs vao para o lixo simplesmente
+				System.out.println("ERROR: client " + clientId + " does not have a buffer");
 				clientInfo.n_currentJobs --; // fingimos que 1 job foi concluido
 				clientInfo.permissionToPush.signal();
-				System.out.println("ERROR: client " + clientId + " does not have a buffer");
 			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();
@@ -336,7 +338,7 @@ public class Server
 		// criar threadpool de distribuir trabalho para workers
 		Thread schedulerThread;
 		for (int i = 0; i < threadWorkerInfo.length; i++) {
-			schedulerThread = new Thread(new SchedulerThreadRunnable(threadWorkerInfo[i], this.inputBufferClient));
+			schedulerThread = new Thread(new SchedulerThreadRunnable(threadWorkerInfo[i], this.inputBufferClient, i));
 			schedulerThread.start();
 		}
 

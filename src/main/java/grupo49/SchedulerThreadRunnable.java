@@ -3,10 +3,12 @@ package grupo49;
 public class SchedulerThreadRunnable implements Runnable {
 	private ThreadWorkerInfo workers;
 	private BoundedBuffer<ClientMessage<CtSMsg>> inputBuffer;
+	int i; // debug
 
-	public SchedulerThreadRunnable(ThreadWorkerInfo workers, BoundedBuffer<ClientMessage<CtSMsg>> inputBuffer) {
+	public SchedulerThreadRunnable(ThreadWorkerInfo workers, BoundedBuffer<ClientMessage<CtSMsg>> inputBuffer, int i) {
 		this.workers = workers;
 		this.inputBuffer = inputBuffer;
+		this.i = i;
 	}
 
 	@Override
@@ -17,7 +19,7 @@ public class SchedulerThreadRunnable implements Runnable {
 		try {
 			while (true) {
 				inputMessage = inputBuffer.pop();
-				System.out.println("Scheduler: received request " + inputMessage.getMessage().getRequestN() + " from client " + inputMessage.getClient() + ". Dispatching to a worker");
+				System.out.println("Scheduler " + i + ": received request " + inputMessage.getMessage().getRequestN() + " from client " + inputMessage.getClient() + ". Dispatching to a worker");
 
 				// como mensagens status são processadas noutro lado, aqui já se sabe que innerMsg será CtsExecMsg
 
@@ -25,9 +27,9 @@ public class SchedulerThreadRunnable implements Runnable {
 
 				StWMsg outMsg = new StWExecMsg(execMsg.getRequestN(), execMsg.getMem(), execMsg.getData());
 				outputMessage = new ClientMessage<StWMsg>(inputMessage.getClient(),outMsg);
-				// System.out.println("Dispatching to workers request " + inputMessage.getMessage().getRequestN() + " from client " + inputMessage.getClient());
+				System.out.println("Dispatching to workers request " + inputMessage.getMessage().getRequestN() + " from client " + inputMessage.getClient());
 				workers.dispatchToBestWorker(outputMessage, execMsg.getMem());
-				// System.out.println("Scheduler: dispatched request " + inputMessage.getMessage().getRequestN() + " from client " + inputMessage.getClient());
+				System.out.println("Scheduler: dispatched request " + inputMessage.getMessage().getRequestN() + " from client " + inputMessage.getClient());
 				
 				// if (innerMsg instanceof CtSExecMsg) {
 				// 	CtSExecMsg execMsg = (CtSExecMsg) innerMsg;
@@ -46,6 +48,7 @@ public class SchedulerThreadRunnable implements Runnable {
 				// }
 			}
 		} catch (InterruptedException e) {
+			System.out.println("ERROR");
 			e.printStackTrace();
 		}
 	}

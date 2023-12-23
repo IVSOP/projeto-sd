@@ -30,19 +30,14 @@ public class WorkerWorkRunnable implements Runnable {
 
 					// executar a tarefa
 					byte[] output = JobFunction.execute(job);
-					String resStr = "CLIENT " + inputMsg.getClient() + " ";
-					byte[] resStrBytes = resStr.getBytes();
-					byte[] result = new byte[resStrBytes.length + output.length];
-					System.arraycopy(resStrBytes, 0, result, 0, resStrBytes.length);
-					System.arraycopy(output, 0, result, resStrBytes.length, output.length);
 
 					//System.err.println("success, returned "+output.length+" bytes");
-					innerMsg = new WtSExecMsg(msg.getRequestN(), msg.getMemUsed(), result); //se resultado correu bem
+					innerMsg = new WtSExecMsg(msg.getRequestN(), msg.getMemUsed(), output); //se resultado correu bem
 					System.out.println("Succcessfully processed task number " + msg.getRequestN() + " for client " + inputMsg.getClient());
 
 				} catch (JobFunctionException e) { //se resultado correu mal
 					//System.err.println("job failed: code="+e.getCode()+" message="+e.getMessage());
-					innerMsg = new WtSErrorMsg(msg.getRequestN(), msg.getMemUsed(), "CLIENT " + inputMsg.getClient() + " job failed: code="+e.getCode()+" message="+e.getMessage());
+					innerMsg = new WtSErrorMsg(msg.getRequestN(), msg.getMemUsed(), "job failed: code="+e.getCode()+" message="+e.getMessage());
 
 					System.out.println("Error processing task number "  + msg.getRequestN() + " for client " + inputMsg.getClient());
 				}
