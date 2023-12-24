@@ -31,7 +31,7 @@ public class HandleWorkerOutput implements Runnable {
 				try {
 					data.workerLock.lock();
 					System.out.println("Scheduler-WorkerOutput: got the lock trying to fit request " + msg.getMessage().getRequestN() + " from client " + msg.getClient() + " to worker " + data.ID);
-					while (data.memory <= memory) { // <= ou so < para garantir que cabe no worker??
+					while (data.memory < memory) { // <= ou so < para garantir que cabe no worker??
 						System.out.println("Scheduler-WorkerOutput: sleeping trying to fit request " + msg.getMessage().getRequestN() + " from client " + msg.getClient() + " to worker " + data.ID + ". Need " + memory + ", worker has " + data.memory);
 						data.finishedJobCondition.await();
 					}
