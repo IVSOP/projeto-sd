@@ -1,5 +1,6 @@
 package grupo49;
 
+import java.util.NoSuchElementException;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -115,5 +116,18 @@ public class BoundedBuffer<T> {
 			lock.unlock();
 		}
 		return item; // ???????
+	}
+
+	// allways returns imediately (if lock is not held obvs)
+	public T pop_noBlock() {
+		try {
+			lock.lock();
+
+			return queue.remove();
+		} catch (NoSuchElementException e) {
+			return null;
+		} finally {
+			lock.unlock();
+		}
 	}
 }
