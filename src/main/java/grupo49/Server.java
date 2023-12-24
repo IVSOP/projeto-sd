@@ -5,8 +5,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
-// import java.util.concurrent.locks.Condition;
-// import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -246,9 +244,10 @@ public class Server
 	// push message into global input buffer for workers
 	// idk why a worker's memory and job count is changed here and not as soon as memory is received, I forgor
 	// will also change the values on the thread that controls this worker
+	// will wake up the condition associated with the worker
 	public void pushInputBufferWorker(ClientMessage<StCMsg> message, WorkerData data, int memUsed) {
 		try {
-			data.workerLock.writeLock().lock();
+			data.workerLock.lock();
 
 			// nao vou usar isto porque ja temos a lock, podemos alterar diretamente
 			// data.addMemoryAndJobs(message.getMemory(), - 1);
@@ -256,11 +255,13 @@ public class Server
 			data.memory += memUsed;
 			data.jobs --;
 
+			data.finishedJobCondition.signal();
+
 			// ja que mudamos no worker individual, aproveita-se tbm para mudar o acumulador nas threads
 			// nao sei se faz diferenca ser aqui ou fazer um unlock depois, nao pensei muito bem nisto mas vai dar ao mesmo acho eu
+			data.workerLock.unlock(); // unlocked here since no other changes will be made and the push itself will block
 			data.ownerThread.addMemoryAndJobs(new OcupationData(memUsed, -1));
 			
-			data.workerLock.writeLock().unlock(); // unlocked here since no other changes will be made and the push itself will block
 			System.out.println("Client " + message.getClient() + " message " + message.getMessage().getRequestN() + " returned from worker " + data.ID + ", pushing");
 			inputBufferWorker.push(message.clone());
 

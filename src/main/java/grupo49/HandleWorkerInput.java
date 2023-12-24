@@ -36,7 +36,7 @@ public class HandleWorkerInput implements Runnable {
 				regMsg.deserialize(in);
 				this.data = server.registerWorker(regMsg.getMemAvail());
 				System.out.println("New worker connection, ID: " + this.data.ID +" mem " + this.data.memory);
-				outThread = new Thread(new HandleWorkerOutput(out, this.data.outputBuffer, this.data.ID));
+				outThread = new Thread(new HandleWorkerOutput(out, this.data));
 				outThread.start();
 
 				/////////////////////////////////// WORKER INFINITE LOOP

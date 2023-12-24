@@ -95,7 +95,7 @@ public class ThreadWorkerInfo {
 					// agora ja usamos locks individuais, temos de ter a certeza da memoria disponivel
 					// nao usamos locks de read porque podemos ter de alterar o valor, a performance nao deve ser muito diferente, ia ser confuso usar read e write logo a seguir, nem sei como funcemina
 					try {
-						data.workerLock.writeLock().lock();
+						data.workerLock.lock();
 						// nao usei changeMemoryAndJobs(), assim aproveito ja o facto de ter a lock feita (muito confuso mas prontos)
 						if (data.memory >= memory) { // >= ou so >??
 							// worker has been chosen
@@ -114,7 +114,7 @@ public class ThreadWorkerInfo {
 							// NOTA: este push em teoria pode bloquear e, assim, mete todos os outros workers desta thread em espera
 							// mas como este e um dos melhores workers e incrementamos aqui o jobs, significa que em qualquer outro woker seria necessario esperar
 							// podemos ter azar em que escolher outro daria 'unlock' da sua espera mais rapido, mas nao e possivel prever isso, so se fizesse um select() extremament manhoso ou assim
-							data.workerLock.writeLock().unlock();
+							data.workerLock.unlock();
 							data.outputBuffer.push(outputMessage.clone());
 							success = true;
 							// System.out.println("Client " + outputMessage.getClient() + " message " + ((StWExecMsg) outputMessage.getMessage()).getRequestN() + " dispatched to worker " + data.ID);
@@ -122,7 +122,7 @@ public class ThreadWorkerInfo {
 							break;
 						}
 					} finally {
-						if (!success) data.workerLock.writeLock().unlock(); // previne unlock varias vezes ao mesmo
+						if (!success) data.workerLock.unlock(); // previne unlock varias vezes ao mesmo
 					}
 				}
 			} while (success == false);
@@ -140,24 +140,26 @@ public class ThreadWorkerInfo {
 		WorkerData selectedWorker = arr.get(0);
 		System.out.println("Forcing request " + outputMessage.getMessage().getRequestN() + " from client " + outputMessage.getClient() + " to worker " + selectedWorker.ID);
 		try {
-			selectedWorker.workerLock.writeLock().lock();
-			selectedWorker.memory -= memory;
-			selectedWorker.jobs ++;
-			try {
-				memoryAndJobsLock.writeLock().lock();
-				totalMemoryRemaining -= memory;
-				totalPendingJobs ++;
-			} finally {
-				memoryAndJobsLock.writeLock().unlock();
-			}
-			selectedWorker.workerLock.writeLock().unlock();
+			selectedWorker.workerLock.lock();
+
+			// isto agora fica feito no output
+			// selectedWorker.memory -= memory;
+			// selectedWorker.jobs ++;
+			// try {
+			// 	memoryAndJobsLock.writeLock().lock();
+			// 	totalMemoryRemaining -= memory;
+			// 	totalPendingJobs ++;
+			// } finally {
+			// 	memoryAndJobsLock.writeLock().unlock();
+			// }
+			selectedWorker.workerLock.unlock();
 			unlockflag = true;
 			selectedWorker.outputBuffer.push(outputMessage.clone());
 		} catch (InterruptedException e) {
 			System.out.println("ERROR pushing to worker");
 			e.printStackTrace();
 		} finally {
-			if (!unlockflag) selectedWorker.workerLock.writeLock().lock();
+			if (!unlockflag) selectedWorker.workerLock.lock();
 			System.out.println("Forced request " + outputMessage.getMessage().getRequestN() + " from client " + outputMessage.getClient() + " to worker " + selectedWorker.ID);
 		}
 	}
@@ -168,26 +170,26 @@ public class ThreadWorkerInfo {
 		Boolean unlockflag = false; // mudar esta manhosice pfv;
 		for (WorkerData worker : arr) {
 			try {
-				worker.workerLock.writeLock().lock();
+				worker.workerLock.lock();
 				// nao usei changeMemoryAndJobs(), assim aproveito ja o facto de ter a lock feita (muito confuso mas prontos)
 				if (worker.memory >= memory) { // >= ou so >??
 					// worker has been chosen
-					worker.memory -= memory;
-					worker.jobs ++;
 
-						// isto podia ser feito em qualquer sitio acho eu, ficou aqui
-						try {
-							memoryAndJobsLock.writeLock().lock();
-							totalMemoryRemaining -= memory;
-							totalPendingJobs ++;
-						} finally {
-							memoryAndJobsLock.writeLock().unlock();
-						}
-					
+					// isto agora fica feito no output
+					// worker.memory -= memory;
+					// worker.jobs ++;
+						// try {
+						// 	memoryAndJobsLock.writeLock().lock();
+						// 	totalMemoryRemaining -= memory;
+						// 	totalPendingJobs ++;
+						// } finally {
+						// 	memoryAndJobsLock.writeLock().unlock();
+						// }
+
 					// NOTA: este push em teoria pode bloquear e, assim, mete todos os outros workers desta thread em espera
 					// mas como este e um dos melhores workers e incrementamos aqui o jobs, significa que em qualquer outro woker seria necessario esperar
 					// podemos ter azar em que escolher outro daria 'unlock' da sua espera mais rapido, mas nao e possivel prever isso, so se fizesse um select() extremament manhoso ou assim
-					worker.workerLock.writeLock().unlock();
+					worker.workerLock.unlock();
 					unlockflag = true;
 					worker.outputBuffer.push(outputMessage.clone());
 					System.out.println("Sent request " + outputMessage.getMessage().getRequestN() + " from client " + outputMessage.getClient() + " to worker " + worker.ID);
@@ -199,7 +201,7 @@ public class ThreadWorkerInfo {
 				System.out.println("ERROR pushing to worker");
 				e.printStackTrace();
 			} finally {
-				if (!unlockflag) worker.workerLock.writeLock().unlock();
+				if (!unlockflag) worker.workerLock.unlock();
 			}
 		}
 		return false;
