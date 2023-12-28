@@ -80,8 +80,11 @@ public class SchedulerThreadRunnable implements Runnable {
 					}
 				}
 
-				// sort por prioridade, depois por memoria ao contrario. menos prioridade e menos memoria fica primeiro
-				Arrays.sort(messageBuffer, 0, size, (a,b) -> { 
+				// sort por prioridade, depois por memoria ao contrario. mais prioridade e mais memoria fica primeiro
+				// assim os mais pequenos acabam por ficar para ultimo,
+				// mas como sao mais faceis de correr e (supostamente) ocupam menos tempo
+				// o delay nao e significativo
+				Arrays.sort(messageBuffer, 0, size, (a,b) -> {
 					int res;
 					res = b.priority - a.priority;
 					if (res == 0) {
@@ -115,7 +118,7 @@ public class SchedulerThreadRunnable implements Runnable {
 
 						} else {
 							// encontrar first match e mandar
-							Boolean sent = workers.tryDispatchToBestWorker(message.message, message.memory); // decrementa dados sobre este scheduler, se for preciso
+							Boolean sent = workers.tryDispatchToBestWorker(message.message, message.memory);
 							if (sent == false) {
 								// nao encontramos, aumentar prioridade
 								message.priority++;

@@ -136,7 +136,7 @@ public class ThreadWorkerInfo {
 
 	// assumes sorted array and locked array
 	public void forceDispatchToBestWorker(ClientMessage<StWMsg> outputMessage, int memory) {
-		Boolean unlockflag = false; // mudar esta manhosice pfv;
+		// Boolean unlockflag = false; // mudar esta manhosice pfv;
 		WorkerData selectedWorker = arr.get(0);
 		System.out.println("Forcing request " + outputMessage.getMessage().getRequestN() + " from client " + outputMessage.getClient() + " to worker " + selectedWorker.ID);
 		try {
@@ -152,14 +152,14 @@ public class ThreadWorkerInfo {
 			// } finally {
 			// 	memoryAndJobsLock.writeLock().unlock();
 			// }
-			selectedWorker.workerLock.unlock();
-			unlockflag = true;
+			// selectedWorker.workerLock.unlock();
+			// unlockflag = true;
 			selectedWorker.outputBuffer.push(outputMessage.clone());
 		} catch (InterruptedException e) {
 			System.out.println("ERROR pushing to worker");
 			e.printStackTrace();
 		} finally {
-			if (!unlockflag) selectedWorker.workerLock.lock();
+			// if (!unlockflag) selectedWorker.workerLock.unlock();
 			System.out.println("Forced request " + outputMessage.getMessage().getRequestN() + " from client " + outputMessage.getClient() + " to worker " + selectedWorker.ID);
 		}
 	}
@@ -186,6 +186,7 @@ public class ThreadWorkerInfo {
 						// 	memoryAndJobsLock.writeLock().unlock();
 						// }
 
+					// NOTA NOTA: mudei tanta coisa entretanto que nem sei se isto ainda se aplica, ignorar
 					// NOTA: este push em teoria pode bloquear e, assim, mete todos os outros workers desta thread em espera
 					// mas como este e um dos melhores workers e incrementamos aqui o jobs, significa que em qualquer outro woker seria necessario esperar
 					// podemos ter azar em que escolher outro daria 'unlock' da sua espera mais rapido, mas nao e possivel prever isso, so se fizesse um select() extremament manhoso ou assim
