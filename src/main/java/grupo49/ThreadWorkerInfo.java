@@ -1,6 +1,7 @@
 package grupo49;
 
 import java.util.ArrayList;
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -14,14 +15,16 @@ public class ThreadWorkerInfo {
 
 	// para a query de ocupacao de servico ser mais rapida
 	public ReentrantReadWriteLock memoryAndJobsLock;
-		int totalMemoryRemaining; 
-		int totalPendingJobs;
+		public int totalMemoryRemaining; 
+		public int totalPendingJobs;
+		public Condition jobReceivedCondition; // os seus workers signalam isto sempre que um job e recebido. queriamos algo equivalente a esperar por qualquer uma das conditions do worker mas sem complicacoes
 
 	public ThreadWorkerInfo() {
 		this.arr = new ArrayList<>();
 		this.arrayLock = new ReentrantLock();
 		this.totalMemoryRemaining = 0;
 		this.memoryAndJobsLock = new ReentrantReadWriteLock();
+		this.jobReceivedCondition = memoryAndJobsLock.writeLock().newCondition();
 	}
 
 	public void addWorker(WorkerData data) {
@@ -37,19 +40,20 @@ public class ThreadWorkerInfo {
 	}
 
 	// adds to this
-	public void addMemoryAndJobs(Server.OcupationData data) {
+	// signals condition
+	public void jobCompleted(Server.OcupationData data) {
 		try {
 			memoryAndJobsLock.writeLock().lock();
 			this.totalPendingJobs += data.current_jobs;
 			this.totalMemoryRemaining += data.memory_remaining;
+			jobReceivedCondition.signal();
 		} finally {
 			memoryAndJobsLock.writeLock().unlock();
 		}
 	}
 
 	// adds to the received data
-	// o nome disto e mesmo muito mau mas ao menos nao fica parecido com a de cima
-	public void readMemoryAndJobs(Server.OcupationData data) {
+	public void addMemoryAndJobs(Server.OcupationData data) {
 		try {
 			memoryAndJobsLock.readLock().lock();
 			data.current_jobs += this.totalPendingJobs;
@@ -102,27 +106,28 @@ public class ThreadWorkerInfo {
 							data.memory -= memory;
 							data.jobs ++;
 
-								// isto podia ser feito em qualquer sitio acho eu, ficou aqui
-								try {
-									memoryAndJobsLock.writeLock().lock();
-									totalMemoryRemaining -= memory;
-									totalPendingJobs ++;
-								} finally {
-									memoryAndJobsLock.writeLock().unlock();
-								}
-							
-							// NOTA: este push em teoria pode bloquear e, assim, mete todos os outros workers desta thread em espera
-							// mas como este e um dos melhores workers e incrementamos aqui o jobs, significa que em qualquer outro woker seria necessario esperar
-							// podemos ter azar em que escolher outro daria 'unlock' da sua espera mais rapido, mas nao e possivel prever isso, so se fizesse um select() extremament manhoso ou assim
-							data.workerLock.unlock();
+							data.workerLock.unlock(); // meter lock depois de lock do owner dava deadlocks
 							data.outputBuffer.push(outputMessage.clone());
-							success = true;
+
+							// isto podia ser feito em qualquer sitio acho eu, ficou aqui
+							try {
+								memoryAndJobsLock.writeLock().lock();
+								totalMemoryRemaining -= memory;
+								totalPendingJobs ++;
+							} finally {
+								memoryAndJobsLock.writeLock().unlock();
+							}
+
 							// System.out.println("Client " + outputMessage.getClient() + " message " + ((StWExecMsg) outputMessage.getMessage()).getRequestN() + " dispatched to worker " + data.ID);
 							// System.out.println("Worker now has jobs: " + data.jobs + ", memory: " + data.memory);
+							success = true;
 							break;
+						} else {
+							data.workerLock.unlock();
 						}
 					} finally {
-						if (!success) data.workerLock.unlock(); // previne unlock varias vezes ao mesmo
+						// isto interessa???
+						data.workerLock.unlock();
 					}
 				}
 			} while (success == false);
@@ -140,7 +145,7 @@ public class ThreadWorkerInfo {
 		WorkerData selectedWorker = arr.get(0);
 		System.out.println("Forcing request " + outputMessage.getMessage().getRequestN() + " from client " + outputMessage.getClient() + " to worker " + selectedWorker.ID);
 		try {
-			selectedWorker.workerLock.lock();
+			// selectedWorker.workerLock.lock();
 
 			// isto agora fica feito no output
 			// selectedWorker.memory -= memory;

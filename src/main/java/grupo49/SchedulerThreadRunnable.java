@@ -62,8 +62,22 @@ public class SchedulerThreadRunnable implements Runnable {
 					messageBuffer[size] = new PriorityMessage(0, outputMessage.clone(), execMsg.getMem());
 					size++;
 				} else if (size >= SchedulerMessageBufferSize) { // queue cheia, nao fazemos pop sequer
+					// por causa da prioridade e tamanho da queue etc, acho que isto nunca chega a correr porque a queue nunca enche, mas se for preciso esta aqui
+					// temos de esperar por qualquer worker para acabar qualquer job (podiamos esperar por um X de memoria mas era mais complicado)
+					// fazemos pela condition do proprio scheduler e vemos se a sua memoria total ja chega. nao garante que 1 job vai correr, mas muito melhor que espera ativa
+					Arrays.sort(messageBuffer, 0, size, (a,b) -> a.memory - b.memory);
+					int minimum_memory = messageBuffer[0].memory;
+					try {
+						workers.memoryAndJobsLock.writeLock().lock();
 
-					// nao se faz nada.....
+						while (workers.totalMemoryRemaining < minimum_memory) {
+							workers.jobReceivedCondition.await();
+						}
+
+					} finally {
+						workers.memoryAndJobsLock.writeLock().unlock();
+					}
+
 				} else { // temos coisas mas nao temos a queue cheia. tentamos dar pop, se nao der imediatamente entao processamos o que temos
 
 					inputMessage = inputBuffer.pop_noBlock();

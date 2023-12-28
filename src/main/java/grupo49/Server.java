@@ -260,7 +260,7 @@ public class Server
 			// ja que mudamos no worker individual, aproveita-se tbm para mudar o acumulador nas threads
 			// nao sei se faz diferenca ser aqui ou fazer um unlock depois, nao pensei muito bem nisto mas vai dar ao mesmo acho eu
 			data.workerLock.unlock(); // unlocked here since no other changes will be made and the push itself will block
-			data.ownerThread.addMemoryAndJobs(new OcupationData(memUsed, -1));
+			data.ownerThread.jobCompleted(new OcupationData(memUsed, -1));
 			
 			System.out.println("Client " + message.getClient() + " message " + message.getMessage().getRequestN() + " returned from worker " + data.ID + ", pushing");
 			inputBufferWorker.push(message.clone());
@@ -274,7 +274,7 @@ public class Server
 		OcupationData data = new OcupationData(0, 0);
 
 		for (ThreadWorkerInfo thread : threadWorkerInfo) {
-			thread.readMemoryAndJobs(data);
+			thread.addMemoryAndJobs(data);
 		}
 
 		return data;
