@@ -114,6 +114,8 @@ public class SchedulerThreadRunnable implements Runnable {
 					PriorityMessage message;
 					for (j = 0; j < size; j++) {
 						message = messageBuffer[j];
+						// nao uso locks porque e so read, nao precisa de estar 100% certo
+						// como so esta thread pode aumentar os valores dos workers, eles so podem melhorar
 						workers.arr.sort((wa,wb) -> wb.memory - wa.memory); // sort por memoria livre. mais memoria livre fica primeiro
 
 						if (message.priority >= MaxPriority) {
