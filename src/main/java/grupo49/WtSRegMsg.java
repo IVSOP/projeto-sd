@@ -29,7 +29,6 @@ public class WtSRegMsg implements WtSMsg {
     public void serializeWithoutFlush(DataOutputStream dos) throws IOException{
         // só há uma mensagem de autenticação WtoS por isso n serializo com opcode
         dos.writeInt(this.memAvailable);
-        dos.flush();
     }
     
     //deserialize assumes opcode was previously read, only uses information after opcode

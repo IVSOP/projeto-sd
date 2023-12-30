@@ -35,7 +35,7 @@ public class SchedulerThreadRunnable implements Runnable {
 	public void run() {
 		ClientMessage<CtSMsg> inputMessage = null;
 		ClientMessage<StWMsg> outputMessage = null;
-		
+
 		// como mensagens status são processadas noutro lado, aqui já se sabe que innerMsg será CtsExecMsg
 		PriorityMessage messageBuffer[] = new PriorityMessage[SchedulerMessageBufferSize];
 		int size = 0;
@@ -106,8 +106,6 @@ public class SchedulerThreadRunnable implements Runnable {
 					}
 					return res;
 				}); // pesado o sort ficar aqui mas funcemina
-
-
 				
 				try {
 					workers.arrayLock.lock();
