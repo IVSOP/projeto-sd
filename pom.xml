@@ -47,15 +47,58 @@
   </dependencies>
 
   <build>
+	<plugins>
+	<!-- para poder criar um jar com tudo incluindo todas as dependencias, suei muito com isto -->
+	  <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+		<version>3.2.4</version>
+        <configuration>
+			<createDependencyReducedPom>true</createDependencyReducedPom>
+			<filters>
+				<filter>
+					<artifact>*:*</artifact>
+					<excludes>
+						<exclude>META-INF/*.SF</exclude>
+						<exclude>META-INF/*.DSA</exclude>
+						<exclude>META-INF/*.RSA</exclude>
+					</excludes>
+				</filter>
+			</filters>
+
+        </configuration>
+
+		<executions>
+			<execution>
+				<phase>package</phase>
+				<goals>
+					<goal>shade</goal>
+				</goals>
+				<configuration>
+					<shadedArtifactAttached>true</shadedArtifactAttached>
+					<transformers>
+						<transformer
+								implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+						<transformer
+								implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+							<manifestEntries>
+								<!-- <Main-Class>com.wojto.wmcase.application.Application</Main-Class> -->
+							</manifestEntries>
+						</transformer>
+					</transformers>
+				</configuration>
+			</execution>
+		</executions>
+        </plugin>
+	  </plugins>
     <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
       <plugins>
 	    <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>exec-maven-plugin</artifactId>
-            <!-- <version>1.7.0</version> -->
             <executions>
 				<execution>
-<!-- ClientUI -->
+					<!-- ClientUI -->
 					<id>client</id>
 					<goals>
                         <goal>java</goal>
@@ -65,7 +108,7 @@
                     </configuration>
 				</execution>
                 <execution>
-<!-- Server -->
+					<!-- Server -->
                     <id>server</id>
                     <goals>
                         <goal>java</goal>
@@ -75,7 +118,7 @@
                     </configuration>
                 </execution>
 				<execution>
-<!-- Worker -->
+					<!-- Worker -->
 					<id>worker</id>
                     <goals>
                         <goal>java</goal>
@@ -104,10 +147,17 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <version>2.22.1</version>
         </plugin>
-        <plugin>
+        <!-- <plugin>
           <artifactId>maven-jar-plugin</artifactId>
           <version>3.0.2</version>
-        </plugin>
+		  <configuration>
+                <archive>
+                    <manifest>
+                        <addClasspath>true</addClasspath>
+                    </manifest>
+                </archive>
+            </configuration>
+        </plugin> -->
         <plugin>
           <artifactId>maven-install-plugin</artifactId>
           <version>2.5.2</version>
